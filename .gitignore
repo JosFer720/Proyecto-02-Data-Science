@@ -1,0 +1,18 @@
+# Datos crudos pesados (no se suben a git, se regeneran con src/download_dataset.py)
+data/raw/transactions.csv
+data/raw/transactions.csv.gz
+acquire-valued-shoppers-challenge.zip
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Sistema
+.DS_Store
+Thumbs.db
