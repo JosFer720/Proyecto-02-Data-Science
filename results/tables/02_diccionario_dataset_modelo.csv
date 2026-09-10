@@ -1,0 +1,38 @@
+variable,descripcion
+n_lineas,"lineas de transaccion en el historial, incluidas devoluciones y descuentos"
+n_compras,lineas de compra real: cantidad mayor a 0 y monto mayor a 0
+n_devoluciones,lineas con cantidad negativa
+n_descuentos,lineas con monto negativo y cantidad mayor o igual a 0
+n_visitas,dias distintos con al menos una transaccion
+gasto_total,suma neta de purchaseamount en dolares: compras menos devoluciones y descuentos
+ticket_promedio,gasto_total dividido entre n_visitas
+dias_ultima_compra,dias entre la ultima transaccion y offerdate
+antiguedad_dias,dias entre la primera transaccion registrada y offerdate
+n_categorias_distintas,categorias distintas compradas
+n_marcas_distintas,marcas distintas compradas
+n_companias_distintas,companias distintas compradas
+n_compras_categoria,compras previas de la categoria ofertada
+gasto_categoria,monto neto gastado en la categoria ofertada
+n_compras_categoria_30d,compras de la categoria ofertada en los 30 dias previos a offerdate
+n_compras_categoria_60d,compras de la categoria ofertada en los 60 dias previos a offerdate
+n_compras_categoria_90d,compras de la categoria ofertada en los 90 dias previos a offerdate
+n_compras_categoria_180d,compras de la categoria ofertada en los 180 dias previos a offerdate
+n_compras_compania,compras previas de la compania ofertada
+gasto_compania,monto neto gastado en la compania ofertada
+n_compras_compania_30d,compras de la compania ofertada en los 30 dias previos a offerdate
+n_compras_compania_60d,compras de la compania ofertada en los 60 dias previos a offerdate
+n_compras_compania_90d,compras de la compania ofertada en los 90 dias previos a offerdate
+n_compras_compania_180d,compras de la compania ofertada en los 180 dias previos a offerdate
+n_compras_marca,compras previas de la marca ofertada
+gasto_marca,monto neto gastado en la marca ofertada
+n_compras_marca_30d,compras de la marca ofertada en los 30 dias previos a offerdate
+n_compras_marca_60d,compras de la marca ofertada en los 60 dias previos a offerdate
+n_compras_marca_90d,compras de la marca ofertada en los 90 dias previos a offerdate
+n_compras_marca_180d,compras de la marca ofertada en los 180 dias previos a offerdate
+n_compras_producto,"compras previas del mismo producto: misma categoria, compania y marca de la oferta"
+gasto_producto,monto neto gastado en el mismo producto de la oferta
+dias_ultima_compra_categoria,dias desde la ultima compra de la categoria ofertada; vacio si nunca la compro
+nunca_compro_categoria,1 si no hay compras previas de la categoria ofertada
+nunca_compro_compania,1 si no hay compras previas de la compania ofertada
+nunca_compro_marca,1 si no hay compras previas de la marca ofertada
+nunca_compro_producto,1 si no hay compras previas de el producto ofertada

@@ -1,0 +1,13 @@
+,dtype_por_defecto,mb_por_defecto,dtype_reducido,mb_reducido
+id,int64,8.0,int64,8.0
+chain,int64,8.0,int16,2.0
+dept,int64,8.0,int16,2.0
+category,int64,8.0,int16,2.0
+company,int64,8.0,int64,8.0
+brand,int64,8.0,int32,4.0
+date,str,18.0,datetime64[us],8.0
+productsize,float64,8.0,float32,4.0
+productmeasure,str,10.1,str,10.1
+purchasequantity,int64,8.0,int32,4.0
+purchaseamount,float64,8.0,float64,8.0
+TOTAL,,100.1,,60.1
