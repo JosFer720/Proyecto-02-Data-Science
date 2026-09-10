@@ -23,6 +23,9 @@ TRANSACTIONS_PATH = RAW_DATA_DIR / "transactions.csv.gz"
 
 TRAIN_OFFERS_PATH = PROCESSED_DATA_DIR / "train_offers.csv"
 DATASET_MODELO_PATH = PROCESSED_DATA_DIR / "dataset_modelo.csv"
+DATASET_MODELO_TEST_PATH = PROCESSED_DATA_DIR / "dataset_modelo_test.csv"
+TRANSACCIONES_MUESTRA_PATH = PROCESSED_DATA_DIR / "transacciones_muestra.csv"
+TRANSACCIONES_REDUCIDAS_PATH = PROCESSED_DATA_DIR / "transacciones_reducidas.parquet"
 
 RANDOM_STATE = 42
 

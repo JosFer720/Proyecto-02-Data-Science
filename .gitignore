@@ -3,6 +3,9 @@ data/raw/transactions.csv
 data/raw/transactions.csv.gz
 acquire-valued-shoppers-challenge.zip
 
+# Transacciones reducidas generadas por el notebook 02 (cientos de MB)
+data/processed/transacciones_reducidas.parquet
+
 # Python
 __pycache__/
 *.pyc
