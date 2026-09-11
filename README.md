@@ -1,6 +1,6 @@
 # Proyecto 2 — Predicción de compradores recurrentes
 
-Curso CC3092 Deep Learning y Sistemas Inteligentes, UVG. Reto 11 de la guía del Proyecto 2 (categoría Negocios), resuelto con el dataset de Kaggle [Acquire Valued Shoppers Challenge](https://www.kaggle.com/c/acquire-valued-shoppers-challenge/data) (autorizado por el profesor en reemplazo del dataset de Tianchi).
+Curso CC3084 Data Science, UVG. Reto 11 de la guía del Proyecto 2 (categoría Negocios), resuelto con el dataset de Kaggle [Acquire Valued Shoppers Challenge](https://www.kaggle.com/c/acquire-valued-shoppers-challenge/data) (autorizado por el profesor en reemplazo del dataset de Tianchi).
 
 ## Problema
 
