@@ -51,6 +51,34 @@ Historial completo de compras de cada cliente durante al menos un año (no solo 
 
 Formato exacto de envío esperado por Kaggle: `id`, `repeatProbability`.
 
+## `data/processed/dataset_modelo.csv`
+
+Generado por `notebooks/02_preprocesamiento_transacciones.ipynb` con `src/preprocesamiento.py`. Una fila por cliente de train (160,057) con las columnas de `trainHistory` y de su oferta en `offers`, más las variables de comportamiento. `dataset_modelo_test.csv` tiene las mismas columnas sin `repeattrips` ni `repeater`. Se carga con `preprocesamiento.cargar_dataset_modelo()`.
+
+Todas las variables de historial usan solo transacciones de la misma cadena y con fecha anterior a `offerdate`. Una "compra" es una línea con `purchasequantity > 0` y `purchaseamount > 0`; las devoluciones y las líneas de descuento se cuentan aparte pero sí entran al gasto neto.
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id`, `chain`, `market`, `offer`, `offerdate` | entero / fecha | igual que en `trainHistory` |
+| `category`, `company`, `brand`, `offervalue`, `quantity` | entero / decimal | producto y condiciones de la oferta, desde `offers` |
+| `repeattrips`, `repeater` | entero / booleano | variable de conteo y variable objetivo |
+| `n_lineas` | entero | líneas de transacción en el historial, incluidas devoluciones y descuentos |
+| `n_compras` | entero | líneas de compra real |
+| `n_devoluciones` | entero | líneas con cantidad negativa |
+| `n_descuentos` | entero | líneas con monto negativo y cantidad mayor o igual a 0 |
+| `n_visitas` | entero | días distintos con al menos una transacción |
+| `gasto_total` | decimal | suma neta de `purchaseamount` en dólares |
+| `ticket_promedio` | decimal | `gasto_total / n_visitas` |
+| `dias_ultima_compra` | entero | días entre la última transacción y `offerdate` |
+| `antiguedad_dias` | entero | días entre la primera transacción registrada y `offerdate` |
+| `n_categorias_distintas`, `n_marcas_distintas`, `n_companias_distintas` | entero | diversidad de consumo |
+| `n_compras_{categoria,compania,marca}` | entero | compras previas de la categoría, compañía o marca ofertada |
+| `gasto_{categoria,compania,marca}` | decimal | monto neto gastado en ellas |
+| `n_compras_{categoria,compania,marca}_{30,60,90,180}d` | entero | compras en los últimos N días antes de `offerdate` |
+| `n_compras_producto`, `gasto_producto` | entero / decimal | compras y monto del producto exacto: misma categoría, compañía y marca |
+| `dias_ultima_compra_categoria` | entero | días desde la última compra de la categoría ofertada; vacío si nunca la compró |
+| `nunca_compro_{categoria,compania,marca,producto}` | 0/1 | 1 si no hay compras previas de esa dimensión |
+
 ## Joins entre archivos
 
 - `transactions` ↔ `trainHistory`/`testHistory`: por `(id, chain)`.
