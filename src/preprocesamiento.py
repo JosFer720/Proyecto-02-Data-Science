@@ -20,8 +20,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+try:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+except ModuleNotFoundError:
+    pa = None
+    pq = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from carga import cargar_offers, cargar_test, cargar_train
@@ -315,6 +319,10 @@ class _PasadaTransacciones:
         self.muestras.append(tx[self.rng.random(len(tx)) < FRACCION_MUESTRA])
 
     def _escribir_reducidas(self, tx: pd.DataFrame) -> None:
+        if pa is None or pq is None:
+            raise ImportError(
+                "pyarrow es necesario para escribir transacciones reducidas en Parquet."
+            )
         tabla = pa.Table.from_pandas(tx, preserve_index=False)
         if self.escritor is None:
             self.escritor = pq.ParquetWriter(self.ruta_reducidas, tabla.schema)
