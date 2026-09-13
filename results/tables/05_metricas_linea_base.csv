@@ -1,0 +1,2 @@
+modelo,auc_validacion_temporal,fecha_corte,n_entrenamiento,n_validacion
+regresion_logistica_linea_base,0.5613538270563887,2013-04-24,124558,35499
