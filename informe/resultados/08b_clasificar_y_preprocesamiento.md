@@ -9,7 +9,7 @@ El usuario puede ingresar al cliente de dos formas:
 - **Un cliente de ejemplo.** La aplicación incluye 100 clientes reales de la semana de prueba, con sus 119,819 líneas de compra originales. Los modelos no vieron a estos clientes durante el entrenamiento. Al elegir uno, la página muestra su oferta, la fecha de la oferta y su mercado, y permite descargar sus compras en CSV como modelo del formato.
 - **Un archivo propio.** El usuario sube un CSV con las compras de un cliente, en el formato de las transacciones de la competencia, y elige la oferta que se le hará, la fecha de la oferta y el mercado.
 
-![Ingreso de los datos y ficha del cliente en la página Clasificar](../../results/figures/09_app_clasificar_datos.jpg)
+![Ingreso de los datos y resumen de la predicción en la página Clasificar](../../results/figures/09_app_clasificar_datos.jpg)
 
 ## Preprocesamiento invisible para el usuario
 
@@ -37,6 +37,8 @@ Antes de calcular, el módulo revisa los datos y responde con un mensaje claro e
 
 La página carga los cuatro modelos congelados de la versión 2 una sola vez y solo les pide predicciones; nunca los vuelve a entrenar. Antes de usarlos, el cargador comprueba que cada archivo no haya cambiado y que la versión de scikit-learn sea la misma con que se entrenaron.
 
+La página se divide en dos columnas: a la izquierda los datos y la ficha del cliente, y a la derecha el resultado, para ver ambos sin desplazarse. El resultado empieza con una tarjeta que destaca la probabilidad que asigna la regresión logística, el modelo de referencia, si alcanza su umbral y cuántos de los cuatro modelos coinciden con ella.
+
 El usuario elige ver los cuatro modelos o uno solo. Para cada modelo, la gráfica muestra:
 
 - la probabilidad de recompra en una barra, con el color fijo de ese modelo en todo el proyecto;
@@ -45,7 +47,7 @@ El usuario elige ver los cuatro modelos o uno solo. Para cada modelo, la gráfic
 
 El título de la gráfica resume la respuesta, por ejemplo "3 de 4 modelos predicen que volverá a comprar". Con un cliente de ejemplo, el usuario también puede revelar qué pasó en la realidad y compararlo con la predicción.
 
-![Probabilidad de recompra según los cuatro modelos en la página Clasificar](../../results/figures/09_app_clasificar_resultado.jpg)
+![Ficha del cliente y probabilidad de recompra según los cuatro modelos en la página Clasificar](../../results/figures/09_app_clasificar_resultado.jpg)
 
 Debajo, una segunda gráfica conecta la predicción con el hallazgo central del análisis exploratorio. Entre los clientes que ya habían comprado el producto ofertado, el 42.8% volvió a comprar, frente al 24.2% de los que nunca lo habían comprado. La gráfica resalta el grupo al que pertenece el cliente, para que el usuario entienda por qué los modelos le asignan esa probabilidad.
 
