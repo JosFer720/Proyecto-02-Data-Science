@@ -17,7 +17,20 @@ La regresión logística obtuvo el mayor AUC y F1, aunque su ventaja de AUC fren
 
 ![AUC de los modelos](../../results/figures/08_auc_modelos.png)
 
-El AUC 0.645 del modelo logístico anterior se obtuvo sobre la misma semana de prueba y con entrenamiento hasta el 23 de abril. Frente a esa referencia comparable, la regresión logística versión 2 mejoró 0.0020 y el perceptrón 0.0011; Random Forest y Gradient Boosting quedaron 0.0299 y 0.0329 por debajo, respectivamente.
+El modelo logístico de la fase exploratoria obtuvo un AUC de 0.6446 sobre la misma semana de prueba, también con entrenamiento hasta el 23 de abril. Frente a esa referencia comparable, la regresión logística versión 2 mejoró 0.0024 y el perceptrón 0.0015; Random Forest y Gradient Boosting quedaron 0.0295 y 0.0325 por debajo, respectivamente.
+
+## Versión 1 frente a versión 2
+
+La versión 1 de cada modelo se entrenó solo hasta el 16 de abril; la versión 2 agregó la semana de validación y conservó los mismos hiperparámetros. La tabla compara el AUC de ambas en la semana de prueba. Las cifras de la versión 1 corresponden a la primera ejecución de este cuaderno.
+
+| Modelo | AUC versión 1 | AUC versión 2 | Cambio |
+|---|---:|---:|---:|
+| Regresión logística | 0.6026 | **0.6470** | +0.0444 |
+| Perceptrón multicapa | 0.6122 | 0.6461 | +0.0339 |
+| Random Forest | 0.6019 | 0.6151 | +0.0132 |
+| Gradient Boosting | **0.6133** | 0.6121 | −0.0012 |
+
+Agregar la semana más reciente mejoró a tres de los cuatro modelos y cambió el orden: con la versión 1, Gradient Boosting tenía el mayor AUC. La semana de validación se parece más a la de prueba, con 33.60% de recompra frente a 35.91%. Además, con ella los modelos pasaron de conocer 7 a conocer 11 de las 12 ofertas que aparecen en la prueba, así que parte de la mejora se explica porque ya habían visto esas ofertas. La sección de ofertas no vistas analiza ese efecto.
 
 ## Costo de cómputo y elección
 
@@ -33,9 +46,18 @@ Las matrices usan el umbral seleccionado en validación para cada modelo, igual 
 
 ## Ofertas no vistas
 
-En la semana de prueba hubo 1,334 clientes con ofertas vistas y 34,165 con ofertas no vistas; estas últimas representaron 96.3% del conjunto. Los AUC en ofertas vistas fueron 0.6589 para regresión logística, 0.6861 para Random Forest, 0.6717 para Gradient Boosting y 0.6611 para el perceptrón. En ofertas no vistas fueron 0.6421, 0.6100, 0.6076 y 0.6413, respectivamente. La regresión logística y el perceptrón mostraron la menor degradación, de 0.0169 y 0.0198.
+Una oferta cuenta como vista si aparece en los datos con que se entrenaron los modelos versión 2, del 1 de marzo al 23 de abril. Con ese criterio, 33,086 clientes de la semana de prueba, el 93.2%, recibieron una de las 11 ofertas ya vistas, y solo 2,413, el 6.8%, recibieron la única oferta nueva. Por lo tanto, la semana de prueba mide sobre todo el desempeño con ofertas conocidas.
 
-En cinco divisiones `GroupShuffleSplit` que reservaron ofertas completas, Gradient Boosting obtuvo el mayor AUC medio, aunque también la mayor variación:
+| Modelo | AUC con ofertas vistas | AUC con la oferta no vista | Diferencia |
+|---|---:|---:|---:|
+| Regresión logística | 0.6552 | 0.5710 | −0.0841 |
+| Perceptrón multicapa | 0.6507 | 0.5871 | −0.0636 |
+| Random Forest | 0.6206 | 0.5664 | −0.0542 |
+| Gradient Boosting | 0.6185 | 0.5757 | −0.0428 |
+
+Los cuatro modelos pierden AUC con la oferta nueva. Los que más ganaron al incorporar la semana de validación, la regresión logística y el perceptrón, son también los que más pierden. Como el grupo no visto es una sola oferta, esta comparación es solo indicativa.
+
+La situación del conjunto de prueba de Kaggle es distinta: allí el 96.3% de los clientes recibió ofertas ausentes del entrenamiento. Para medir ese caso se usaron cinco divisiones `GroupShuffleSplit` que reservaron ofertas completas. En cada división los modelos se reentrenan con los hiperparámetros de su ficha, por lo que este resultado no depende de la versión 1 o 2.
 
 | Modelo | AUC medio | Desviación estándar | Mínimo | Máximo |
 |---|---:|---:|---:|---:|
@@ -46,8 +68,8 @@ En cinco divisiones `GroupShuffleSplit` que reservaron ofertas completas, Gradie
 
 ![AUC al reservar ofertas no vistas](../../results/figures/08_auc_ofertas_no_vistas.png)
 
-La diferencia entre la prueba temporal y las divisiones por oferta indica que el resultado depende del tipo de cambio futuro evaluado. La regresión logística generalizó mejor a la semana posterior, mientras que Gradient Boosting obtuvo el mejor promedio al simular campañas con ofertas completamente nuevas.
+Con ofertas nuevas, Gradient Boosting obtuvo el mayor AUC medio, 0.6197, y la regresión logística el tercero, 0.6090. La diferencia, 0.0107, es menor que la desviación estándar de ambos modelos, así que con ofertas nuevas ningún algoritmo se distingue con claridad. La regresión logística se mantiene como modelo de referencia porque obtuvo el mayor AUC en la semana de prueba, su desempeño con ofertas nuevas queda dentro del rango de los demás y es el más sencillo de interpretar. Aun así, su rendimiento debe vigilarse en cada campaña que traiga ofertas nuevas.
 
 ## Reproducibilidad
 
-Las cifras provienen de `results/tables/08_metricas_prueba.csv`, `08_predicciones_prueba.parquet` y `08_validacion_por_ofertas.csv`, generadas por el notebook 08 ejecutado con `cargar_modelos(version=2)`. Las predicciones individuales permiten reconstruir las curvas ROC y matrices sin reentrenar los modelos.
+Las cifras provienen de `results/tables/08_metricas_prueba.csv`, `08_predicciones_prueba.parquet` y `08_validacion_por_ofertas.csv`, generadas por el notebook 08 ejecutado con `cargar_modelos(version=2)`. Las ofertas vistas se definen respecto del entrenamiento y la validación, que son los datos de los modelos versión 2. Las predicciones individuales permiten reconstruir las curvas ROC y matrices sin reentrenar los modelos.
