@@ -4,13 +4,13 @@
 
 El análisis exploratorio, el entrenamiento y el ajuste de los modelos se ejecutaron en una computadora personal con sistema operativo Windows 11, procesador Intel Core i5-12400 de 6 núcleos físicos y 12 hilos, 32 GB de memoria RAM y una tarjeta gráfica NVIDIA GeForce RTX 4060 Ti con 8 GB. Los algoritmos de scikit-learn usados en este proyecto se ejecutan en el procesador, por lo que la tarjeta gráfica no intervino en el entrenamiento.
 
-[Pendiente: Fernando agrega los datos del equipo donde evaluó los modelos.]
+La evaluación de los modelos en la semana de prueba se hizo en otra computadora con Windows 11 Home, procesador AMD Ryzen 5 7600 de 6 núcleos y 12 hilos, 32 GB de memoria RAM y una tarjeta gráfica NVIDIA GeForce RTX 3060 Ti, además de los gráficos integrados AMD Radeon. La evaluación se ejecutó también en el procesador, con Python 3.13.2 y las mismas versiones de scikit-learn, pandas, numpy, scipy y joblib de la tabla siguiente.
 
 La mayor carga del proyecto fue la lectura de los 349,655,789 registros de transacciones, que se reducen a una fila por cliente antes de entrenar. Con el conjunto ya reducido, ningún algoritmo tarda más de cinco minutos en entrenar, de modo que la búsqueda de hiperparámetros cabe en una sola sesión de trabajo sin necesidad de un servicio de cómputo en la nube.
 
 ## Lenguaje, bibliotecas y paquetes
 
-Todo el código está escrito en Python 3.12.4 y se versiona en GitHub. El trabajo se organizó en cuadernos de Jupyter, uno por etapa, y en módulos reutilizables dentro de la carpeta `src`. Los paquetes que intervienen en los modelos y sus versiones son los siguientes.
+El entrenamiento y el ajuste se hicieron con Python 3.12.4 y todo el código se versiona en GitHub. El trabajo se organizó en cuadernos de Jupyter, uno por etapa, y en módulos reutilizables dentro de la carpeta `src`. Los paquetes que intervienen en los modelos y sus versiones son los siguientes.
 
 | Paquete | Versión | Uso en el proyecto |
 |---|---|---|

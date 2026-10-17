@@ -4,6 +4,12 @@
 
 Los modelos se ajustaron con tres bloques ordenados en el tiempo. El entrenamiento contiene 106,062 clientes con ofertas del 1 de marzo al 16 de abril de 2013 y una tasa de recompra de 23.08%. La validación contiene 18,496 clientes del 17 al 23 de abril, con 33.60% de recompra, y sirvió para elegir los hiperparámetros. La prueba contiene 35,499 clientes del 24 al 30 de abril, con 35.91% de recompra, y no se usó en este paso. La tabla completa está en [la división en tres conjuntos](../../results/tables/07_division_conjuntos.csv).
 
+## Modelos finales: reentrenamiento con la semana de validación
+
+Los hiperparámetros se eligieron con modelos entrenados hasta el 16 de abril. Esos modelos, la versión 1, no vieron la semana de validación, que es la más parecida a la de prueba: 33.60% de recompra frente a 35.91%, y 23.08% en el entrenamiento. Por eso, una vez elegida la configuración de cada algoritmo, se reentrenó con el entrenamiento y la validación juntos, del 1 de marzo al 23 de abril, con 124,558 clientes. Estos modelos son la versión 2 y son los modelos finales. Conservan los mismos hiperparámetros y el mismo umbral de clasificación que la versión 1, porque el umbral no puede recalcularse con una semana que el modelo ya vio.
+
+La semana de prueba no se usó en este cuaderno. Cabe aclarar que la decisión de reentrenar se tomó después de conocer el AUC de la versión 1 en la prueba, por lo que se reportan ambas versiones. El AUC de validación de los modelos de la versión 2 no mide nada, porque ya entrenaron con esa semana; la comparación entre modelos se hace con el AUC de la semana de prueba.
+
 ## Preparación de variables por algoritmo
 
 Todos los modelos reciben las mismas 44 columnas de entrada de `dataset_modelo.csv` y calculan por dentro las variables derivadas, como las tasas por 30 días y las proporciones de compra. Lo que cambia entre algoritmos es la preparación que cada uno necesita. Todas las transformaciones se ajustan solamente con el entrenamiento y quedan guardadas dentro del mismo pipeline, de modo que un cliente nuevo se transforma igual que los de entrenamiento.
@@ -19,7 +25,7 @@ La transformación logarítmica y la estandarización solo se aplican a la regre
 
 ## Búsqueda de hiperparámetros
 
-Se usó búsqueda aleatoria, que según Bergstra y Bengio (2012) encuentra configuraciones tan buenas o mejores que una rejilla con el mismo costo de cómputo. Cada combinación se entrenó con el bloque de entrenamiento y se puntuó con el AUC de la semana de validación. Se probaron 30 combinaciones para la regresión logística, 20 para Random Forest, 40 para Gradient Boosting y 20 para el perceptrón. Los rangos siguen la revisión bibliográfica y todas las combinaciones probadas están en [la tabla de búsqueda](../../results/tables/07_busqueda_hiperparametros.csv).
+Se usó búsqueda aleatoria, que según Bergstra y Bengio (2012) encuentra configuraciones tan buenas o mejores que una rejilla con el mismo costo de cómputo. Cada combinación se entrenó con el bloque de entrenamiento, hasta el 16 de abril, y se puntuó con el AUC de la semana de validación. Se probaron 30 combinaciones para la regresión logística, 20 para Random Forest, 40 para Gradient Boosting y 20 para el perceptrón. Los rangos siguen la revisión bibliográfica y todas las combinaciones probadas están en [la tabla de búsqueda](../../results/tables/07_busqueda_hiperparametros.csv).
 
 Como referencia se entrenó cada algoritmo con la configuración por defecto de scikit-learn y la misma preparación de variables. La comparación con la configuración ajustada es la siguiente.
 
