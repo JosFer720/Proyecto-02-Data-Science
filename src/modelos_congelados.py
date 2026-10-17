@@ -144,7 +144,7 @@ class ModeloCongelado:
     fit = partial_fit = set_params = _bloqueado
 
     def __repr__(self) -> str:
-        return f"ModeloCongelado({self.nombre!r}, AUC validacion {self.ficha['auc_validacion']:.4f})"
+        return f"ModeloCongelado({self.nombre!r}, version {self.ficha.get('version', 1)})"
 
 
 def guardar_modelo_congelado(
@@ -162,6 +162,7 @@ def guardar_modelo_congelado(
     semilla: int = RANDOM_STATE,
     preparacion_previa: str | None = None,
     nota: str | None = None,
+    version: int = 1,
     directorio: Path = MODELS_DIR,
 ) -> dict:
     """Guarda un pipeline ya entrenado y registra su ficha en el manifiesto.
@@ -190,6 +191,7 @@ def guardar_modelo_congelado(
         semilla=semilla,
         preparacion_previa=preparacion_previa,
         nota=nota,
+        version=version,
     )
 
 
@@ -213,10 +215,15 @@ def _registrar(ruta: Path, nombre: str, **datos) -> dict:
 def cargar_modelos(
     nombres: list[str] | None = None,
     prefijo: str | None = None,
+    version: int | None = None,
     directorio: Path = MODELS_DIR,
     estricto: bool = True,
 ) -> dict[str, ModeloCongelado]:
     """Carga los modelos del manifiesto despues de verificarlos.
+
+    ``version`` filtra por la version de la ficha: 1 son los entrenados hasta el
+    16 de abril y 2 los reentrenados con la semana de validacion. Una ficha sin
+    el campo cuenta como version 1.
 
     Se detiene con un mensaje claro si la huella de un archivo no coincide con
     su ficha o si scikit-learn no es la version con que se entreno. Con
@@ -235,7 +242,14 @@ def cargar_modelos(
             )
         elegidos = nombres
     else:
-        elegidos = [n for n in fichas if prefijo is None or n.startswith(prefijo)]
+        elegidos = [
+            n
+            for n in fichas
+            if (prefijo is None or n.startswith(prefijo))
+            and (version is None or fichas[n].get("version", 1) == version)
+        ]
+        if not elegidos:
+            raise ModeloCongeladoError("Ningun modelo del manifiesto cumple el prefijo y la version pedidos")
 
     cargados = {}
     for nombre in elegidos:
@@ -273,16 +287,19 @@ def _verificar_versiones(nombre: str, ficha: dict, estricto: bool) -> None:
 def registrar_modelos_anteriores() -> None:
     """Registra los dos modelos logisticos de los notebooks 05 y 06 para trabajar desde ya.
 
-    Se entrenaron con la division temporal anterior, de dos partes, y por eso su
-    AUC de validacion no es comparable con el de los modelos 07.
+    Se entrenaron hasta el 23 de abril y su AUC se midio en la semana del 24 al
+    30 de abril, la misma semana de prueba que usan los modelos 07.
     """
     comun = {
         "algoritmo": "regresion_logistica",
         "semilla": RANDOM_STATE,
         "periodo_entrenamiento": "2013-03-01 a 2013-04-23 (primer 80% por fecha)",
-        "periodo_validacion": "2013-04-24 a 2013-04-30 (ultimo 20% por fecha)",
+        "periodo_validacion": "2013-04-24 a 2013-04-30 (semana de prueba actual)",
         "tiempo_entrenamiento_s": None,
-        "nota": "Modelo de los notebooks 05 y 06 con la division temporal anterior; reemplazado por 07_*",
+        "nota": (
+            "Entrenado del 1 de marzo al 23 de abril. Su AUC se midio en la semana del 24 al 30 de abril, "
+            "la misma semana de prueba de los modelos 07, que son los que se entrenaron solo hasta el 16 de abril"
+        ),
     }
     registros = [
         (
