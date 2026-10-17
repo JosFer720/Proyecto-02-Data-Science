@@ -29,6 +29,36 @@ Descargar desde la página del reto en Kaggle y colocar en `data/raw/` (ver `src
 
 ## Cómo correr
 
+### Aplicación de resultados y visualizaciones
+
+Usar Python 3.12 (los modelos se guardaron con Python 3.12.4). Las versiones
+de scikit-learn, numpy, pandas, scipy y joblib se fijan según el manifiesto real.
+Desde la raíz del repositorio, en PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python -m streamlit run app/Inicio.py
+```
+
+Abrir la dirección local que imprime Streamlit. La navegación lateral contiene
+Explorar datos, Clasificar y Rendimiento. Explorar permite combinar filtros de
+oferta, cadena y categoría; Rendimiento permite elegir modelos, cambiar el umbral
+y ocultar toda la evaluación con su interruptor. Cambiar el umbral es una
+exploración de errores, no un ajuste del modelo con el conjunto de prueba.
+
+Se necesita `data/processed/dataset_modelo.csv` (notebooks 01 y 02). Rendimiento
+lee exclusivamente las tres tablas `08_*` del contrato; Clasificar requiere
+los modelos v2, el manifiesto y los ejemplos preparados por Joel. No se entrena
+ningún modelo desde la app. Si faltan los datos de exploración o evaluación,
+sus páginas muestran instrucciones para generarlos.
+
+Para regenerar las figuras categóricas: `python app/rehacer_figuras_eda.py`.
+Los textos de Nery y el estado de integración están en `informe/resultados/`;
+el guion y la prueba de uso, en `informe/presentacion_nery.md`.
+
+### Análisis y preparación de datos
+
 ```bash
 pip install -r requirements.txt
 python src/download_dataset.py   # extrae los CSV a data/raw/

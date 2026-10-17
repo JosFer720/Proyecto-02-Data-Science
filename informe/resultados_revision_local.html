@@ -1,0 +1,813 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><style>@page {size:A4; margin:25.4mm} body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.4;color:#222} p{text-align:justify} h1,h2,h3{break-after:avoid} section{break-before:page} img{max-width:100%;max-height:210mm;object-fit:contain} table{border-collapse:collapse;width:100%;font-size:9pt} td,th{border:1px solid #aaa;padding:4px} pre,code{white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt} a{color:#0072B2} </style><body><h1>Proyecto 2 · compilación local para revisión</h1>
+<p><strong>Estado:</strong> pendiente de integración en Google Drive, revisión cruzada de citas APA y prueba externa de uso.</p>
+<p><strong>Secciones faltantes del equipo:</strong> 01_introduccion_y_objetivos.md, 04_datos_y_limpieza.md. No se reemplazaron con contenido atribuido a otros integrantes.</p>
+<section><h1>Marco teórico</h1>
+<p>La guía del proyecto propone la estructura del marco teórico según el tipo de reto. Este proyecto pertenece a la categoría de negocios, así que se adapta la estructura propuesta para los sistemas de recomendación en sus tres partes: la definición teórica del problema, las actividades de preprocesamiento general y los algoritmos de aprendizaje automático usados para resolverlo. La evaluación de los algoritmos se incluye al final de la tercera parte.</p>
+<h2>1. Definición teórica: predicción de compradores recurrentes</h2>
+<h3>1.1 El valor del cliente que regresa</h3>
+<p>Una empresa que conserva a sus clientes depende menos de atraer clientes nuevos, que suele ser más costoso. Christy et al. (2021) señalan que retener a los clientes es más importante que encontrar clientes nuevos y que segmentarlos según su comportamiento permite dirigir estrategias de mercadeo a cada grupo.</p>
+<p>La recompra es la forma más directa de retención en el comercio minorista. Zhang et al. (2022) reportan que en la plataforma Tmall solo el 6.1% de los compradores vuelve a comprar, y citan estudios según los cuales un aumento de cinco por ciento en la tasa de recompra puede elevar las utilidades entre 25% y 95%. La predicción también tiene consecuencias económicas directas: en un torneo de modelos de abandono, Neslin et al. (2006) encontraron que las diferencias de exactitud entre propuestas cambiaban la rentabilidad de una campaña en cientos de miles de dólares.</p>
+<h3>1.2 Promociones y cazadores de ofertas</h3>
+<p>Las promociones atraen muchos compradores nuevos, pero una parte de ellos solo aprovecha el descuento y no vuelve. Liu et al. (2016) describen a estos clientes como cazadores de ofertas de una sola vez y señalan que identificar a quienes pueden convertirse en compradores leales permite dirigirles las promociones, reducir su costo y aumentar el retorno de la inversión. El problema de este proyecto es el mismo: a cada cliente se le ofreció un cupón y se busca anticipar si volverá a comprar el producto después de usarlo.</p>
+<p>Los cupones también se estudian como un problema de selección de clientes. Ren et al. (2021) proponen decidir a qué consumidores enviar cupones electrónicos a partir de su comportamiento anterior, primero segmentándolos y después ajustando un modelo distinto para cada segmento.</p>
+<h3>1.3 Relación no contractual y comportamiento de compra</h3>
+<p>En un supermercado la relación con el cliente es no contractual: el cliente no avisa cuando deja de comprar, solo deja de hacerlo. Por eso la empresa debe inferir su lealtad a partir de su historial. Buckinx y Van den Poel (2005) estudiaron este entorno en un minorista de productos de consumo masivo y encontraron que las variables de comportamiento pasado fueron las mejores para predecir el abandono parcial de los clientes más leales. Martínez et al. (2020) predijeron si un cliente comprará en el mes siguiente a partir del momento y el valor de sus compras anteriores.</p>
+<h3>1.4 Modelo RFM</h3>
+<p>El modelo RFM resume el comportamiento de un cliente en tres medidas calculadas a partir de sus transacciones (Christy et al., 2021):</p>
+<ul>
+<li><strong>Recencia:</strong> tiempo transcurrido desde la última compra.</li>
+<li><strong>Frecuencia:</strong> número de compras o visitas en un periodo.</li>
+<li><strong>Monto:</strong> gasto acumulado del cliente.</li>
+</ul>
+<p>En el estudio de Buckinx y Van den Poel (2005), estas tres medidas fueron las mejores variables predictoras. Sin embargo, describen al cliente en general y no su relación con un producto específico. En un problema de recompra conviene agregar el historial del cliente con la categoría, la marca y el producto ofrecidos, de forma similar a los perfiles de usuarios, comercios, marcas, categorías y productos que construyeron Liu et al. (2016).</p>
+<h3>1.5 Formulación como clasificación binaria</h3>
+<p>El problema se formula como una clasificación binaria. Cada cliente tiene una variable respuesta con dos valores: recurrente, si volvió a comprar el producto ofertado al menos una vez, o no recurrente. A partir del historial previo a la oferta, un modelo de aprendizaje automático estima la probabilidad de que el cliente sea recurrente. Con esa probabilidad, la empresa puede ordenar a sus clientes y priorizar a los de mayor probabilidad en una campaña. La competencia original mide los modelos con el área bajo la curva ROC (Kaggle, 2014).</p>
+<p>Aunque el problema se relaciona con el mercadeo, no es un sistema de recomendación. Un sistema de recomendación ordena muchos productos para cada cliente según sus preferencias. Aquí cada cliente recibió una sola oferta y lo que se estima es si volverá a comprar ese producto. Las probabilidades del modelo sí podrían usarse después para decidir a quién enviar cupones.</p>
+<h2>2. Actividades de preprocesamiento general</h2>
+<p>Los datos de un negocio minorista suelen llegar como bitácoras de transacciones, con una fila por línea de compra. Antes de entrenar un modelo hay que transformarlas en una tabla con una fila por cliente.</p>
+<h3>2.1 Integración y agregación por cliente</h3>
+<p>La primera actividad es unir las transacciones con la información de cada cliente y de cada oferta, y resumirlas por cliente. Liu et al. (2016) concluyen que la construcción de variables fue el factor más importante de su solución, y Ahmad et al. (2019) muestran que agregar nuevas variables puede subir el AUC de un modelo de 84% a 93.3%. Por eso el preprocesamiento no es un paso mecánico, sino una parte central del modelado.</p>
+<p>Dos cuidados son indispensables al agregar:</p>
+<ul>
+<li><strong>Usar solo el historial previo a la oferta.</strong> Si se incluyen compras posteriores, el modelo aprendería información que no existía al momento de decidir, lo que se conoce como fuga de información.</li>
+<li><strong>Respetar las ventanas de tiempo.</strong> Las variables calculadas en ventanas recientes, como 30, 60, 90 o 180 días antes de la oferta, capturan cambios de comportamiento que el total histórico oculta.</li>
+</ul>
+<h3>2.2 Calidad de los datos</h3>
+<p>Las transacciones reales contienen registros que no son compras normales: montos negativos por devoluciones o descuentos, cantidades en cero y unidades de medida vacías. La decisión para cada caso depende de su significado; por ejemplo, un descuento forma parte del gasto neto del cliente y no debe eliminarse.</p>
+<p>Los <strong>valores faltantes</strong> también pueden tener significado. Si un cliente nunca compró la categoría ofertada, la recencia de esa categoría no existe, y esa ausencia es información sobre el cliente. En esos casos se conserva el faltante y se agrega una variable que lo marca, en lugar de eliminar la fila.</p>
+<p>Los <strong>valores atípicos</strong> son comunes en el gasto y la frecuencia de compra, que tienen colas largas. En lugar de eliminarlos, se puede reducir su influencia con una transformación logarítmica, que comprime los valores grandes y conserva el orden de los clientes.</p>
+<h3>2.3 Transformación según el algoritmo</h3>
+<p>Cada familia de algoritmos necesita una preparación distinta:</p>
+<ul>
+<li><strong>Escalado.</strong> La regresión logística y las redes neuronales son sensibles a la escala de las variables, por lo que se estandarizan.</li>
+<li><strong>Codificación de categorías.</strong> Los identificadores de cadena, mercado, categoría, compañía y marca son grupos sin orden, así que se convierten en columnas binarias o en códigos que el modelo trata como grupos.</li>
+<li><strong>Faltantes.</strong> Los modelos lineales y las redes requieren imputarlos. Algunas implementaciones de gradient boosting los manejan de forma nativa (Pedregosa et al., 2011).</li>
+</ul>
+<p>Los árboles de decisión y sus ensambles no dependen de la escala, así que pueden usar las variables sin transformar.</p>
+<h3>2.4 Desbalance de clases</h3>
+<p>En los problemas de retención y recompra la clase de interés suele ser minoritaria. Con pocos casos positivos, un modelo que siempre prediga la clase mayoritaria alcanza una exactitud alta sin aportar información. Hay tres formas habituales de manejarlo:</p>
+<ul>
+<li><strong>Ponderar las clases</strong> dentro del modelo, para que los errores en la clase minoritaria pesen más.</li>
+<li><strong>Submuestrear la clase mayoritaria.</strong> Lemmens y Croux (2006) recomiendan un muestreo balanceado cuando el evento es poco frecuente, acompañado de una corrección del sesgo que introduce.</li>
+<li><strong>Sobremuestrear la clase minoritaria.</strong> El método SMOTE genera ejemplos sintéticos de la clase minoritaria (Chawla et al., 2002).</li>
+</ul>
+<p>La evidencia sobre el sobremuestreo no es concluyente: Verbeke et al. (2012) no encontraron mejoras significativas al aplicarlo en once conjuntos de datos de abandono de clientes. Burez y Van den Poel (2009) compararon métodos de muestreo con técnicas como los bosques aleatorios ponderados y recomiendan medir con el AUC, que no depende de un umbral de clasificación.</p>
+<h2>3. Algoritmos de aprendizaje automático</h2>
+<h3>3.1 Antecedentes en problemas de negocio similares</h3>
+<p>La literatura de predicción de recompra, abandono de clientes y respuesta a cupones ha usado una gama amplia de algoritmos:</p>
+<table>
+<thead>
+<tr>
+<th>Estudio</th>
+<th>Problema</th>
+<th>Algoritmos</th>
+<th>Resultado principal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liu et al., 2016</td>
+<td>Recompra tras una promoción</td>
+<td>Construcción de variables y entrenamiento de modelos</td>
+<td>Las variables fueron el factor decisivo</td>
+</tr>
+<tr>
+<td>Zhang et al., 2022</td>
+<td>Recompra tras una promoción</td>
+<td>Factorización, regresión logística, XGBoost, LightGBM y apilamiento</td>
+<td>El apilamiento subió el AUC en 0.01161</td>
+</tr>
+<tr>
+<td>Martínez et al., 2020</td>
+<td>Compra del mes siguiente</td>
+<td>Varios métodos de aprendizaje automático</td>
+<td>Gradient boosting fue el mejor</td>
+</tr>
+<tr>
+<td>Larivière y Van den Poel, 2005</td>
+<td>Siguiente compra y abandono</td>
+<td>Bosque aleatorio contra regresiones</td>
+<td>El bosque aleatorio ajustó mejor</td>
+</tr>
+<tr>
+<td>Buckinx y Van den Poel, 2005</td>
+<td>Abandono parcial en un minorista</td>
+<td>Regresión logística, red neuronal y bosque aleatorio</td>
+<td>Recencia, frecuencia y monto fueron las mejores variables</td>
+</tr>
+<tr>
+<td>Lemmens y Croux, 2006</td>
+<td>Abandono en telefonía</td>
+<td>Bagging y boosting de árboles</td>
+<td>Ambos mejoraron la predicción</td>
+</tr>
+<tr>
+<td>Verbeke et al., 2012</td>
+<td>Abandono en telefonía</td>
+<td>Amplia gama de clasificadores</td>
+<td>Muchos clasificadores rindieron parecido</td>
+</tr>
+<tr>
+<td>De Caigny et al., 2018</td>
+<td>Abandono</td>
+<td>Árbol, regresión logística, bosque aleatorio y un modelo híbrido</td>
+<td>El híbrido igualó al bosque aleatorio</td>
+</tr>
+<tr>
+<td>Ahmad et al., 2019</td>
+<td>Abandono en telefonía</td>
+<td>Árbol, bosque aleatorio, gradient boosting y XGBoost</td>
+<td>XGBoost fue el mejor</td>
+</tr>
+<tr>
+<td>Ren et al., 2021</td>
+<td>Uso de cupones electrónicos</td>
+<td>Segmentación, bosque de aislamiento y regresión logística</td>
+<td>Segmentar redujo el desbalance</td>
+</tr>
+<tr>
+<td>Lessmann et al., 2015</td>
+<td>Riesgo crediticio</td>
+<td>41 clasificadores</td>
+<td>El bosque aleatorio es el punto de comparación recomendado</td>
+</tr>
+</tbody>
+</table>
+<p>Tres patrones se repiten. La regresión logística aparece como referencia en casi todos los estudios. Los ensambles de árboles, por bagging o por boosting, obtienen los mejores resultados o empatan con ellos en la mayoría de las comparaciones con datos tabulares de clientes. Las redes neuronales son competitivas en algunos estudios: Lessmann et al. (2015) encontraron que superan a la regresión logística, pero en datos tabulares no superan de forma consistente a los ensambles de árboles (Shwartz-Ziv y Armon, 2022; Grinsztajn et al., 2022).</p>
+<h3>3.2 Regresión logística</h3>
+<p>La regresión logística modela la probabilidad de la clase positiva como una función logística de una combinación lineal de las variables (Cox, 1958). Sus coeficientes indican cómo cambia la probabilidad con cada variable, lo que la hace fácil de interpretar. Puede regularizarse para evitar el sobreajuste: la penalización L2 encoge todos los coeficientes y la L1 lleva algunos a cero. Supone que cada variable tiene un efecto lineal y aditivo sobre el logaritmo de la razón de probabilidades, por lo que necesita variables transformadas y escaladas.</p>
+<h3>3.3 Bosque aleatorio</h3>
+<p>El bosque aleatorio entrena muchos árboles de decisión, cada uno con una muestra con reemplazo de los datos y considerando en cada división un subconjunto aleatorio de variables. La predicción final promedia los árboles (Breiman, 2001). Captura relaciones no lineales e interacciones entre variables sin especificarlas, es poco sensible a los valores extremos y no necesita escalar las variables. Sus hiperparámetros principales son el número de árboles, la profundidad máxima, el tamaño mínimo de las hojas y la fracción de variables por división.</p>
+<h3>3.4 Gradient boosting</h3>
+<p>El gradient boosting construye árboles en secuencia, cada uno corrigiendo los errores de los anteriores en la dirección del gradiente de una función de pérdida (Friedman, 2001). Existen varias implementaciones:</p>
+<ul>
+<li><strong>XGBoost</strong> agrega regularización a la función objetivo y técnicas para escalar a conjuntos de datos grandes y dispersos (Chen y Guestrin, 2016).</li>
+<li><strong>LightGBM</strong> agrupa los valores de cada variable en histogramas, lo que acelera mucho el entrenamiento con una precisión similar (Ke et al., 2017).</li>
+<li><strong>HistGradientBoostingClassifier</strong> de scikit-learn está inspirado en LightGBM y maneja de forma nativa los valores faltantes y las variables categóricas (Pedregosa et al., 2011).</li>
+</ul>
+<p>Sus hiperparámetros principales son la tasa de aprendizaje, el número máximo de hojas por árbol, el tamaño mínimo de las hojas y la regularización.</p>
+<h3>3.5 Perceptrón multicapa</h3>
+<p>El perceptrón multicapa es una red neuronal de capas totalmente conectadas que se entrena con retropropagación del error (Rumelhart et al., 1986). Su arquitectura se define por el número de capas ocultas, el número de neuronas por capa y la regularización. Puede aprender relaciones no lineales, pero es sensible a la escala de las variables y a la elección de hiperparámetros, por lo que requiere escalamiento y detención temprana del entrenamiento. Con pocas capas ocultas no se considera aprendizaje profundo.</p>
+<h3>3.6 Evaluación de los algoritmos</h3>
+<p><strong>Curva ROC y AUC.</strong> La curva ROC muestra la tasa de verdaderos positivos frente a la tasa de falsos positivos para todos los umbrales posibles. El área bajo esa curva, AUC, mide la capacidad del modelo para ordenar a los casos positivos por encima de los negativos: 0.5 equivale al azar y 1 a una separación perfecta (Fawcett, 2006). Como no depende de un umbral, es la medida adecuada con clases desbalanceadas (Burez y Van den Poel, 2009).</p>
+<p><strong>Métricas con umbral.</strong> Al fijar un umbral, cada cliente se clasifica como recurrente o no, y se construye la matriz de confusión con los verdaderos positivos, falsos positivos, falsos negativos y verdaderos negativos. De ella salen tres medidas:</p>
+<ul>
+<li><strong>Precisión:</strong> proporción de clientes clasificados como recurrentes que realmente lo son.</li>
+<li><strong>Sensibilidad:</strong> proporción de clientes recurrentes que el modelo detecta.</li>
+<li><strong>F1:</strong> media armónica de precisión y sensibilidad.</li>
+</ul>
+<p><strong>Validación temporal.</strong> Un modelo de clientes se usa para predecir periodos futuros, así que debe evaluarse con datos posteriores a los de entrenamiento. Neslin et al. (2006) mostraron que los modelos de abandono conservan su desempeño cuando se aplican a datos recolectados tres meses después de los de entrenamiento, lo que respalda esta forma de evaluar.</p>
+<p><strong>Ajuste de hiperparámetros.</strong> Los hiperparámetros se eligen con un conjunto de validación separado del de prueba. Bergstra y Bengio (2012) mostraron que la búsqueda aleatoria encuentra configuraciones tan buenas o mejores que la búsqueda en rejilla con el mismo presupuesto de cómputo.</p></section>
+<section><h1>Metodología</h1>
+<h2>Pasos que siguió el grupo</h2>
+<p>El trabajo se organizó en etapas encadenadas. Cada etapa tiene un cuaderno de Jupyter o un módulo de código en el repositorio, y cada una produce los archivos que usa la siguiente.</p>
+<ol>
+<li><strong>Carga y exploración inicial.</strong> Se cargaron los archivos de la competencia y se describió la variable respuesta. Hay 160,057 clientes con respuesta conocida, de los cuales 27.14% volvió a comprar.</li>
+<li><strong>Preprocesamiento de las transacciones.</strong> Las 349,655,789 líneas de compra se leyeron por bloques desde el archivo comprimido y se resumieron en una fila por cliente, con 37 variables de comportamiento previas a la oferta.</li>
+<li><strong>Análisis exploratorio.</strong> Se estudiaron las variables numéricas y categóricas, sus relaciones con la recompra, los valores faltantes y los atípicos.</li>
+<li><strong>Revisión bibliográfica y selección de algoritmos.</strong> Se revisaron estudios de recompra, abandono de clientes y respuesta a cupones para elegir los algoritmos.</li>
+<li><strong>Partición de los datos.</strong> Los clientes se separaron por fecha de oferta en entrenamiento, validación y prueba.</li>
+<li><strong>Ajuste de hiperparámetros.</strong> Cada algoritmo se entrenó con el bloque de entrenamiento y sus hiperparámetros se eligieron con el AUC de la semana de validación.</li>
+<li><strong>Modelos finales.</strong> Con la configuración elegida, cada algoritmo se reentrenó con entrenamiento y validación juntos y se guardó como un modelo congelado, que ya no se vuelve a entrenar.</li>
+<li><strong>Evaluación.</strong> Los modelos congelados se evaluaron una sola vez en la semana de prueba. Su desempeño con ofertas nuevas se midió con divisiones agrupadas por oferta.</li>
+<li><strong>Aplicación.</strong> Se construyó una aplicación que preprocesa los datos de un cliente nuevo y lo clasifica con los modelos congelados.</li>
+</ol>
+<h2>Selección de los conjuntos de entrenamiento y prueba</h2>
+<p>El conjunto de prueba de la competencia, con 151,484 clientes, no incluye la variable respuesta, así que no sirve para medir los modelos. Por eso la evaluación se hizo dentro de los 160,057 clientes con respuesta conocida, separándolos por la fecha de su oferta:</p>
+<table>
+<thead>
+<tr>
+<th>Conjunto</th>
+<th>Fechas de la oferta</th>
+<th style="text-align: right;">Clientes</th>
+<th style="text-align: right;">Tasa de recompra</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entrenamiento</td>
+<td>1 de marzo al 16 de abril de 2013</td>
+<td style="text-align: right;">106,062</td>
+<td style="text-align: right;">23.08%</td>
+<td>Entrenar los modelos durante el ajuste</td>
+</tr>
+<tr>
+<td>Validación</td>
+<td>17 al 23 de abril</td>
+<td style="text-align: right;">18,496</td>
+<td style="text-align: right;">33.60%</td>
+<td>Elegir los hiperparámetros y el umbral</td>
+</tr>
+<tr>
+<td>Prueba</td>
+<td>24 al 30 de abril</td>
+<td style="text-align: right;">35,499</td>
+<td style="text-align: right;">35.91%</td>
+<td>Medir los modelos finales una sola vez</td>
+</tr>
+</tbody>
+</table>
+<p>La partición respeta el orden del tiempo por tres razones:</p>
+<ul>
+<li><strong>Así se usa un modelo en la práctica.</strong> Se entrena con el pasado y se aplica a clientes futuros.</li>
+<li><strong>Así separó los datos la competencia.</strong> Su conjunto de prueba contiene las ofertas emitidas a partir del 1 de mayo de 2013.</li>
+<li><strong>El comportamiento cambia entre semanas.</strong> La tasa de recompra sube de 23.08% en el entrenamiento a 35.91% en la prueba. Una partición al azar mezclaría esas semanas y daría una medida demasiado optimista.</li>
+</ul>
+<p>Después de elegir los hiperparámetros, los modelos finales se reentrenaron con entrenamiento y validación juntos, 124,558 clientes del 1 de marzo al 23 de abril, conservando los hiperparámetros y los umbrales elegidos. La semana de validación es la más parecida a la de prueba, y un modelo de producción debe aprovechar los datos más recientes disponibles. La semana de prueba nunca se usó para ajustar ni para elegir umbrales.</p>
+<p>Esta decisión se tomó después de conocer el resultado de la primera versión de los modelos, entrenada solo hasta el 16 de abril. Por transparencia se reportan ambas versiones.</p>
+<h3>Validación con ofertas nuevas</h3>
+<p>La semana de prueba contiene sobre todo ofertas que los modelos finales ya conocían. En cambio, la mayoría de los clientes del conjunto de prueba de la competencia recibió ofertas que no aparecen en el entrenamiento. Para medir ese caso, se hicieron cinco divisiones de los 124,558 clientes de entrenamiento y validación que reservan ofertas completas. En cada división se apartaron cinco ofertas para probar, se entrenó un modelo temporal con las demás y se verificó que ninguna oferta estuviera en ambos lados. Esos modelos temporales se descartaron después de evaluarlos.</p>
+<h2>Selección de los algoritmos</h2>
+<p>Los algoritmos se eligieron a partir de la revisión bibliográfica y de las características de los datos:</p>
+<table>
+<thead>
+<tr>
+<th>Característica de los datos</th>
+<th>Consecuencia para la elección</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Datos tabulares, una fila por cliente</td>
+<td>Favorece a los ensambles de árboles</td>
+</tr>
+<tr>
+<td>160,057 clientes</td>
+<td>Descarta métodos cuyo costo crece mucho con el número de filas</td>
+</tr>
+<tr>
+<td>37 variables de comportamiento y 5 identificadores de grupo con pocas categorías</td>
+<td>Basta con codificar los grupos; no se necesitan modelos para categorías con miles de niveles</td>
+</tr>
+<tr>
+<td>Faltantes con significado en la recencia de la categoría</td>
+<td>Conviene un algoritmo que use el faltante como información</td>
+</tr>
+<tr>
+<td>Colas largas y valores extremos</td>
+<td>Los árboles los toleran; los modelos lineales y las redes necesitan transformarlos</td>
+</tr>
+<tr>
+<td>27.14% de clientes recurrentes</td>
+<td>Ponderar las clases y medir con el AUC</td>
+</tr>
+<tr>
+<td>Uso en una aplicación</td>
+<td>El modelo debe dar probabilidades y predecir rápido</td>
+</tr>
+</tbody>
+</table>
+<p>Se seleccionaron cuatro algoritmos de aprendizaje automático, uno por cada familia que la literatura identifica como relevante:</p>
+<table>
+<thead>
+<tr>
+<th>Algoritmo</th>
+<th>Papel en el proyecto</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td>Referencia</td>
+<td>Es el estándar de la industria, se interpreta con facilidad y ya se había usado en la fase exploratoria</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td>Ensamble por bagging</td>
+<td>Lessmann et al. (2015) lo recomiendan como punto de comparación obligatorio</td>
+</tr>
+<tr>
+<td>Gradient Boosting, con <code>HistGradientBoostingClassifier</code></td>
+<td>Ensamble por boosting</td>
+<td>Fue el mejor en los estudios más parecidos (Martínez et al., 2020; Ahmad et al., 2019) y maneja los faltantes de forma nativa</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td>Red neuronal</td>
+<td>Permite comprobar si una red neuronal supera a los árboles en estos datos</td>
+</tr>
+</tbody>
+</table>
+<p>Para gradient boosting se eligió la implementación de scikit-learn y no XGBoost ni LightGBM por tres razones:</p>
+<ul>
+<li>Está inspirada en LightGBM, así que conserva su forma de trabajar con histogramas.</li>
+<li>Ya estaba disponible en el entorno del proyecto.</li>
+<li>Comparte la interfaz de los demás modelos, lo que simplifica guardarlos y cargarlos en la aplicación.</li>
+</ul>
+<p>Se descartaron otros algoritmos por las siguientes razones:</p>
+<ul>
+<li><strong>Máquinas de soporte vectorial con kernel:</strong> su costo de entrenamiento crece rápidamente con el número de clientes y no entregan probabilidades de forma directa.</li>
+<li><strong>Naive Bayes:</strong> supone variables independientes, y las ventanas de compra de 30, 60, 90 y 180 días están anidadas.</li>
+<li><strong>Redes profundas para datos tabulares:</strong> no superan a los ensambles de árboles y requieren mucho más ajuste (Shwartz-Ziv y Armon, 2022; Grinsztajn et al., 2022).</li>
+<li><strong>Máquinas de factorización:</strong> están pensadas para categorías con muchísimos niveles, y aquí hay pocas.</li>
+<li><strong>Sobremuestreo con SMOTE:</strong> Verbeke et al. (2012) no encontraron mejoras significativas con sobremuestreo, así que se prefirió ponderar las clases.</li>
+</ul>
+<h2>Selección de las herramientas</h2>
+<p>El proyecto se desarrolló en Python con scikit-learn, pandas y numpy, y el código se versionó en GitHub. Los recursos de cómputo, los lenguajes, las bibliotecas y sus versiones se detallan en la sección de herramientas utilizadas. Las tecnologías de la aplicación se justifican en la sección que la describe.</p></section>
+<section><h1>Herramientas utilizadas</h1>
+<h2>Recursos de cómputo</h2>
+<p>El análisis exploratorio, el entrenamiento y el ajuste de los modelos se ejecutaron en una computadora personal con sistema operativo Windows 11, procesador Intel Core i5-12400 de 6 núcleos físicos y 12 hilos, 32 GB de memoria RAM y una tarjeta gráfica NVIDIA GeForce RTX 4060 Ti con 8 GB. Los algoritmos de scikit-learn usados en este proyecto se ejecutan en el procesador, por lo que la tarjeta gráfica no intervino en el entrenamiento.</p>
+<p>La evaluación de los modelos en la semana de prueba se hizo en otra computadora con Windows 11 Home, procesador AMD Ryzen 5 7600 de 6 núcleos y 12 hilos, 32 GB de memoria RAM y una tarjeta gráfica NVIDIA GeForce RTX 3060 Ti, además de los gráficos integrados AMD Radeon. La evaluación se ejecutó también en el procesador, con Python 3.13.2 y las mismas versiones de scikit-learn, pandas, numpy, scipy y joblib de la tabla siguiente.</p>
+<p>La mayor carga del proyecto fue la lectura de los 349,655,789 registros de transacciones, que se reducen a una fila por cliente antes de entrenar. Con el conjunto ya reducido, ningún algoritmo tarda más de cinco minutos en entrenar, de modo que la búsqueda de hiperparámetros cabe en una sola sesión de trabajo sin necesidad de un servicio de cómputo en la nube.</p>
+<h2>Lenguaje, bibliotecas y paquetes</h2>
+<p>El entrenamiento y el ajuste se hicieron con Python 3.12.4 y todo el código se versiona en GitHub. El trabajo se organizó en cuadernos de Jupyter, uno por etapa, y en módulos reutilizables dentro de la carpeta <code>src</code>. Los paquetes que intervienen en los modelos y sus versiones son los siguientes.</p>
+<table>
+<thead>
+<tr>
+<th>Paquete</th>
+<th>Versión</th>
+<th>Uso en el proyecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scikit-learn</td>
+<td>1.6.1</td>
+<td>Pipelines de preparación, los cuatro algoritmos, búsqueda aleatoria y métricas</td>
+</tr>
+<tr>
+<td>pandas</td>
+<td>2.2.3</td>
+<td>Carga, agregación por cliente y tablas de resultados</td>
+</tr>
+<tr>
+<td>numpy</td>
+<td>2.1.2</td>
+<td>Cálculo numérico y transformación logarítmica</td>
+</tr>
+<tr>
+<td>scipy</td>
+<td>1.15.1</td>
+<td>Distribuciones de los rangos de la búsqueda aleatoria</td>
+</tr>
+<tr>
+<td>joblib</td>
+<td>1.4.2</td>
+<td>Guardado y carga de los modelos entrenados</td>
+</tr>
+<tr>
+<td>matplotlib</td>
+<td>3.9.2</td>
+<td>Figuras estáticas del informe</td>
+</tr>
+<tr>
+<td>pyarrow</td>
+<td>25.0.1</td>
+<td>Lectura y escritura de tablas en formato Parquet</td>
+</tr>
+</tbody>
+</table>
+<p>Pedregosa et al. (2011) describen scikit-learn, la biblioteca que aporta la regresión logística, el Random Forest, el Gradient Boosting basado en histogramas y el perceptrón multicapa usados en este trabajo.</p>
+<p>Los modelos finales se guardan con las versiones exactas de la tabla anterior. Un archivo de joblib solo es confiable con la misma versión de scikit-learn con que se creó, así que cada modelo tiene una ficha con la huella SHA-256 del archivo y las versiones del entorno. El cargador común comprueba ambas cosas antes de usar un modelo y se detiene si algo no coincide. Esto garantiza que la aplicación, las tablas del informe y las gráficas usen exactamente los mismos modelos.</p></section>
+<section><h1>Resultados: análisis exploratorio</h1>
+<p>El conjunto limpio contiene 160,057 clientes y 49 columnas; 43,438 clientes recompraron (27.14%). La unidad de análisis es el cliente asociado a su oferta. Los identificadores comerciales están anonimizados y las diferencias observadas describen asociaciones, sin atribuir causalidad.</p>
+<p>La distribución de compras presenta colas largas. Las distribuciones crudas y mensuales se conservan como contexto (figuras 3 y 4 del EDA); los histogramas y boxplots muestran la dispersión y los valores extremos de las variables agregadas (figuras 7 y 8). Se mantienen los extremos para no modificar arbitrariamente la composición del conjunto. <code>repeattrips</code> describe el resultado y debe excluirse de las entradas predictivas; su figura 6 pasa al anexo.</p>
+<p><img alt="Figura 3. Variables crudas de las transacciones" src="../results/figures/03_transacciones_crudas.png" /></p>
+<p><img alt="Figura 4. Historial mensual de transacciones" src="../results/figures/03_transacciones_mensuales.png" /></p>
+<p><img alt="Figura 7. Distribuciones de comportamiento" src="../results/figures/03_histogramas_features.png" /></p>
+<p><img alt="Figura 8. Comportamiento según recompra" src="../results/figures/03_boxplots_por_clase.png" /></p>
+<p>Las tasas por quintiles de recencia, frecuencia y monto permiten comparar comportamientos sin depender de la escala monetaria (figura 9). El historial con el producto ofertado constituye el hallazgo central: la recompra es aproximadamente 24.2% entre quienes no habían comprado el producto y 42.8% entre quienes sí lo habían comprado. Esta asociación justifica mostrar el historial de producto en la aplicación, pero no garantiza por sí sola una predicción correcta para cada cliente.</p>
+<p><img alt="Figura 9. Recompra por quintiles RFM" src="../results/figures/03_tasa_recompra_rfm.png" /></p>
+<p><img alt="Hallazgo central: recompra según compras previas" src="../results/figures/03_tasa_recompra_compra_previa.png" /></p>
+<p><img alt="Figura 11. Relaciones entre variables de comportamiento" src="../results/figures/03_dispersion.png" /></p>
+<p>Se observaron 130 cadenas, 34 mercados, 13 categorías, 11 compañías y 12 marcas. Las figuras 12 a 16 se rehacen con etiquetas legibles, grupos ordenados y una paleta común. En las comparaciones de tasas se incorpora la referencia global y el número de clientes por grupo; en frecuencia y correlación la referencia global de recompra no corresponde a la unidad del eje.</p>
+<p>La cadena 21 concentra 27,373 clientes y presenta 25.14% de recompra. Las cadenas 64 y 166 alcanzan 47.22% y 54.42%, con 5,889 y 3,499 clientes; la cadena 46 registra 18.53%, con 5,440. Las figuras muestran los 15 grupos con más observaciones y mantienen las tablas completas como respaldo.</p>
+<p><img alt="Figura 12. Frecuencia por cadena, con tamaño de grupo" src="../results/figures/04_frecuencia_chain.png" /></p>
+<p><img alt="Figura 13. Recompra por cadena y referencia global" src="../results/figures/04_tasa_recompra_chain.png" /></p>
+<p>Las ofertas de hasta 1.00 registran 31.02% de recompra, con 93,859 clientes. Los intervalos 1.00–1.50 y 1.50–2.00 alcanzan 21.91% y 20.41%. El intervalo superior a 2.00 registra 30.47%, pero solo incluye 3,393 clientes: el tamaño acompaña la tasa para evitar interpretar grupos pequeños como evidencia equivalente.</p>
+<p><img alt="Figura 14. Recompra por valor de la oferta" src="../results/figures/04_tasa_recompra_offervalue.png" /></p>
+<p>La categoría 9909 registra 44.93% con 22,147 clientes y la 2119, 43.44% con 18,767. La categoría más frecuente, 3203, registra 19.58% con 45,652 clientes. La categoría 4401 presenta 8.88%, con 15,008 clientes. Los códigos no permiten identificar productos ni explicar causalmente las diferencias.</p>
+<p><img alt="Figura 15. Recompra por categoría" src="../results/figures/04_tasa_recompra_category.png" /></p>
+<p>Las correlaciones de Spearman individuales con la recompra son limitadas: las mayores corresponden a compras previas de categoría, alrededor de 0.164. La matriz conserva el signo y una escala de −1 a 1 para distinguir asociaciones inversas y directas.</p>
+<p><img alt="Figura 16. Correlaciones de Spearman" src="../results/figures/04_matriz_correlacion.png" /></p>
+<p>La recencia de categoría tiene 72,639 faltantes (45.38%): corresponden a ausencia de compras previas y se conservan junto a la bandera de historial. La figura 17 documenta clientes con volumen extremo, que permanecen en el conjunto limpio; su preparación específica para cada algoritmo se presenta en la sección de ajuste.</p>
+<p><img alt="Figura 17. Clientes con volumen extremo" src="../results/figures/03_atipicos_volumen.png" /></p>
+<p>Fuentes: tablas 03 y 04 y secciones originales de EDA del repositorio. Las tasas interactivas se recalculan sobre la selección y la referencia global permanece fija.</p></section>
+<section><h1>Preparación de variables y ajuste de parámetros</h1>
+<h2>Conjuntos de datos</h2>
+<p>Los modelos se ajustaron con tres bloques ordenados en el tiempo. El entrenamiento contiene 106,062 clientes con ofertas del 1 de marzo al 16 de abril de 2013 y una tasa de recompra de 23.08%. La validación contiene 18,496 clientes del 17 al 23 de abril, con 33.60% de recompra, y sirvió para elegir los hiperparámetros. La prueba contiene 35,499 clientes del 24 al 30 de abril, con 35.91% de recompra, y no se usó en este paso. La tabla completa está en <a href="../../results/tables/07_division_conjuntos.csv">la división en tres conjuntos</a>.</p>
+<h2>Modelos finales: reentrenamiento con la semana de validación</h2>
+<p>Los hiperparámetros se eligieron con modelos entrenados hasta el 16 de abril. Esos modelos, la versión 1, no vieron la semana de validación, que es la más parecida a la de prueba: 33.60% de recompra frente a 35.91%, y 23.08% en el entrenamiento. Por eso, una vez elegida la configuración de cada algoritmo, se reentrenó con el entrenamiento y la validación juntos, del 1 de marzo al 23 de abril, con 124,558 clientes. Estos modelos son la versión 2 y son los modelos finales. Conservan los mismos hiperparámetros y el mismo umbral de clasificación que la versión 1, porque el umbral no puede recalcularse con una semana que el modelo ya vio.</p>
+<p>La semana de prueba no se usó en este cuaderno. Cabe aclarar que la decisión de reentrenar se tomó después de conocer el AUC de la versión 1 en la prueba, por lo que se reportan ambas versiones. El AUC de validación de los modelos de la versión 2 no mide nada, porque ya entrenaron con esa semana; la comparación entre modelos se hace con el AUC de la semana de prueba.</p>
+<h2>Preparación de variables por algoritmo</h2>
+<p>Todos los modelos reciben las mismas 44 columnas de entrada de <code>dataset_modelo.csv</code> y calculan por dentro las variables derivadas, como las tasas por 30 días y las proporciones de compra. Lo que cambia entre algoritmos es la preparación que cada uno necesita. Todas las transformaciones se ajustan solamente con el entrenamiento y quedan guardadas dentro del mismo pipeline, de modo que un cliente nuevo se transforma igual que los de entrenamiento.</p>
+<table>
+<thead>
+<tr>
+<th>Algoritmo</th>
+<th>Faltantes</th>
+<th>Escala de las variables</th>
+<th>Cadena, mercado, categoría, compañía y marca</th>
+<th>Desbalance de clases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td>Mediana y columna que marca el faltante</td>
+<td>Logaritmo con signo y estandarización</td>
+<td>Una columna binaria por grupo, con los grupos de menos de 50 clientes agrupados</td>
+<td>Se ajustó entre pesos balanceados y sin pesos</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td>Mediana y columna que marca el faltante</td>
+<td>Sin cambios, porque los árboles no dependen de la escala</td>
+<td>Una columna binaria por grupo, con el mismo agrupamiento</td>
+<td>Se ajustó entre pesos balanceados, balanceados por árbol y sin pesos</td>
+</tr>
+<tr>
+<td>Gradient Boosting</td>
+<td>El modelo usa los faltantes tal como vienen</td>
+<td>Sin cambios</td>
+<td>Códigos ordinales que el modelo trata como grupos, sin imponer un orden</td>
+<td>Se ajustó entre pesos balanceados y sin pesos</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td>Mediana y columna que marca el faltante</td>
+<td>Logaritmo con signo y estandarización</td>
+<td>Una columna binaria por grupo, con el mismo agrupamiento</td>
+<td>La implementación no admite pesos; se usa el AUC, que no depende del umbral</td>
+</tr>
+</tbody>
+</table>
+<p>La transformación logarítmica y la estandarización solo se aplican a la regresión logística y al perceptrón, que son sensibles a la escala y a las colas largas que mostró el análisis exploratorio. Los dos modelos de árboles conservan las variables en su escala original.</p>
+<h2>Búsqueda de hiperparámetros</h2>
+<p>Se usó búsqueda aleatoria, que según Bergstra y Bengio (2012) encuentra configuraciones tan buenas o mejores que una rejilla con el mismo costo de cómputo. Cada combinación se entrenó con el bloque de entrenamiento, hasta el 16 de abril, y se puntuó con el AUC de la semana de validación. Se probaron 30 combinaciones para la regresión logística, 20 para Random Forest, 40 para Gradient Boosting y 20 para el perceptrón. Los rangos siguen la revisión bibliográfica y todas las combinaciones probadas están en <a href="../../results/tables/07_busqueda_hiperparametros.csv">la tabla de búsqueda</a>.</p>
+<p>Como referencia se entrenó cada algoritmo con la configuración por defecto de scikit-learn y la misma preparación de variables. La comparación con la configuración ajustada es la siguiente.</p>
+<table>
+<thead>
+<tr>
+<th>Algoritmo</th>
+<th>AUC por defecto</th>
+<th>AUC ajustado</th>
+<th>Mejora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td>0.660</td>
+<td>0.662</td>
+<td>+0.002</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td>0.651</td>
+<td>0.680</td>
+<td>+0.029</td>
+</tr>
+<tr>
+<td>Gradient Boosting</td>
+<td>0.672</td>
+<td>0.680</td>
+<td>+0.008</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td>0.637</td>
+<td>0.684</td>
+<td>+0.047</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Mejora del AUC por el ajuste de hiperparámetros" src="../results/figures/07_mejora_auc_por_ajuste.png" /></p>
+<p>El ajuste ayudó más a los algoritmos con más hiperparámetros sensibles. El perceptrón mejoró 0.047 y el Random Forest 0.029, mientras que la regresión logística casi no cambió, porque su configuración por defecto ya era razonable. Gradient Boosting partió de la mejor configuración por defecto y mejoró 0.008. Las cifras de las tablas están en <a href="../../results/tables/07_mejora_por_ajuste.csv">la mejora por ajuste</a>.</p>
+<p><img alt="AUC de cada combinación probada" src="../results/figures/07_busqueda_hiperparametros.png" /></p>
+<p>Los valores elegidos fueron los siguientes.</p>
+<ul>
+<li><strong>Regresión logística:</strong> penalización L2, C de 0.546 y pesos balanceados.</li>
+<li><strong>Random Forest:</strong> 563 árboles, profundidad máxima de 24, mínimo de 44 clientes por hoja, 20% de las variables en cada división y sin pesos por clase.</li>
+<li><strong>Gradient Boosting:</strong> tasa de aprendizaje de 0.187, máximo de 17 hojas, mínimo de 20 clientes por hoja, regularización L2 de 0.034, pesos balanceados y detención temprana.</li>
+<li><strong>Perceptrón multicapa:</strong> dos capas ocultas de 64 y 32 neuronas, alfa de 0.0023, tasa de aprendizaje inicial de 0.00058 y detención temprana.</li>
+</ul>
+<p>Dos precauciones al leer estas cifras. Primero, la configuración ajustada se eligió por su AUC en la semana de validación, así que ese valor es algo optimista; la medida que se reporta para comparar los modelos es la de la semana de prueba. Segundo, la semana de validación tiene una tasa de recompra de 33.60% frente a 23.08% en el entrenamiento, por lo que parte de las diferencias entre configuraciones puede deberse a ese cambio de comportamiento y no solo al algoritmo.</p>
+<h2>Variables que sostienen las predicciones</h2>
+<p>Para saber qué variables usa cada modelo se permutó cada una de las 44 columnas de entrada en la semana de validación y se midió cuánto AUC pierde el modelo congelado. Una pérdida grande indica que el modelo depende de esa variable. Cada medida es el promedio de cinco permutaciones. Los valores están en <a href="../../results/tables/07_importancia_permutacion.csv">la importancia por permutación</a>.</p>
+<p><img alt="Variables con mayor pérdida de AUC al permutarlas" src="../results/figures/07_importancia_permutacion.png" /></p>
+<p>El gasto previo en el producto ofertado es la variable más importante de la regresión logística, con una pérdida de 0.067, y del perceptrón, con 0.035. En Gradient Boosting ocupa el segundo lugar, con 0.019, detrás de la categoría del producto. En el Random Forest el primer lugar es el gasto total, con 0.014, y el gasto en el producto queda en quinto lugar. Es decir, el historial con el producto ofertado, que fue el hallazgo central del análisis exploratorio, sigue entre las variables de mayor peso en tres de los cuatro modelos. El Random Forest reparte el peso entre más variables, ninguna con una pérdida mayor de 0.014.</p>
+<p>Las pérdidas son pequeñas en todos los casos. Eso es coherente con un AUC cercano a 0.68: ninguna variable por sí sola explica la recompra y la señal está repartida entre muchas.</p></section>
+<section><h1>Comparación de los algoritmos</h1>
+<h2>Protocolo de evaluación</h2>
+<p>Los cuatro modelos versión 2 se reentrenaron con los datos del 1 de marzo al 23 de abril de 2013, conservando los hiperparámetros y umbrales elegidos previamente en validación. Después se evaluaron una sola vez en la semana de prueba, del 24 al 30 de abril, formada por 35,499 clientes. La prueba no intervino en el ajuste. El AUC fue la medida principal; precisión, sensibilidad y F1 se calcularon con el umbral de validación propio de cada modelo.</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th style="text-align: right;">AUC</th>
+<th style="text-align: right;">Precisión</th>
+<th style="text-align: right;">Sensibilidad</th>
+<th style="text-align: right;">F1</th>
+<th style="text-align: right;">Entrenamiento (s)</th>
+<th style="text-align: right;">Predicción (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td style="text-align: right;"><strong>0.6470</strong></td>
+<td style="text-align: right;">0.3936</td>
+<td style="text-align: right;"><strong>0.8848</strong></td>
+<td style="text-align: right;"><strong>0.5448</strong></td>
+<td style="text-align: right;">10.02</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td style="text-align: right;">0.6461</td>
+<td style="text-align: right;"><strong>0.4154</strong></td>
+<td style="text-align: right;">0.7476</td>
+<td style="text-align: right;">0.5341</td>
+<td style="text-align: right;">10.69</td>
+<td style="text-align: right;">0.12</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td style="text-align: right;">0.6151</td>
+<td style="text-align: right;">0.3764</td>
+<td style="text-align: right;">0.8169</td>
+<td style="text-align: right;">0.5153</td>
+<td style="text-align: right;">53.74</td>
+<td style="text-align: right;">0.34</td>
+</tr>
+<tr>
+<td>Gradient Boosting</td>
+<td style="text-align: right;">0.6121</td>
+<td style="text-align: right;">0.3846</td>
+<td style="text-align: right;">0.7622</td>
+<td style="text-align: right;">0.5112</td>
+<td style="text-align: right;"><strong>0.70</strong></td>
+<td style="text-align: right;"><strong>0.07</strong></td>
+</tr>
+</tbody>
+</table>
+<p>La regresión logística obtuvo el mayor AUC y F1, aunque su ventaja de AUC frente al perceptrón fue de solo 0.0009. El perceptrón logró la mayor precisión y produjo menos clasificaciones positivas. Por ello, ambos modelos muestran una capacidad de discriminación prácticamente equivalente; la elección entre ellos depende del costo de contactar clientes adicionales.</p>
+<p><img alt="Curvas ROC de los modelos" src="../results/figures/08_curvas_roc.png" /></p>
+<p><img alt="AUC de los modelos" src="../results/figures/08_auc_modelos.png" /></p>
+<p>El modelo logístico de la fase exploratoria obtuvo un AUC de 0.6446 sobre la misma semana de prueba, también con entrenamiento hasta el 23 de abril. Frente a esa referencia comparable, la regresión logística versión 2 mejoró 0.0024 y el perceptrón 0.0015; Random Forest y Gradient Boosting quedaron 0.0295 y 0.0325 por debajo, respectivamente.</p>
+<h2>Versión 1 frente a versión 2</h2>
+<p>La versión 1 de cada modelo se entrenó solo hasta el 16 de abril; la versión 2 agregó la semana de validación y conservó los mismos hiperparámetros. La tabla compara el AUC de ambas en la semana de prueba. Las cifras de la versión 1 corresponden a la primera ejecución de este cuaderno.</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th style="text-align: right;">AUC versión 1</th>
+<th style="text-align: right;">AUC versión 2</th>
+<th style="text-align: right;">Cambio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td style="text-align: right;">0.6026</td>
+<td style="text-align: right;"><strong>0.6470</strong></td>
+<td style="text-align: right;">+0.0444</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td style="text-align: right;">0.6122</td>
+<td style="text-align: right;">0.6461</td>
+<td style="text-align: right;">+0.0339</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td style="text-align: right;">0.6019</td>
+<td style="text-align: right;">0.6151</td>
+<td style="text-align: right;">+0.0132</td>
+</tr>
+<tr>
+<td>Gradient Boosting</td>
+<td style="text-align: right;"><strong>0.6133</strong></td>
+<td style="text-align: right;">0.6121</td>
+<td style="text-align: right;">−0.0012</td>
+</tr>
+</tbody>
+</table>
+<p>Agregar la semana más reciente mejoró a tres de los cuatro modelos y cambió el orden: con la versión 1, Gradient Boosting tenía el mayor AUC. La semana de validación se parece más a la de prueba, con 33.60% de recompra frente a 35.91%. Además, con ella los modelos pasaron de conocer 7 a conocer 11 de las 12 ofertas que aparecen en la prueba, así que parte de la mejora se explica porque ya habían visto esas ofertas. La sección de ofertas no vistas analiza ese efecto.</p>
+<h2>Costo de cómputo y elección</h2>
+<p>Gradient Boosting fue el más rápido, con 0.70 segundos de entrenamiento y 0.07 segundos de predicción, pero obtuvo el menor AUC. La regresión logística y el perceptrón necesitaron cerca de 10 segundos para entrenarse y superaron 0.646 de AUC. Se toma la regresión logística como modelo de referencia por alcanzar el mayor AUC, sensibilidad y F1, sin una carga de cómputo relevante. El perceptrón es una alternativa razonable si se prefiere reducir la cantidad de clientes clasificados como recompra.</p>
+<p><img alt="Tiempo de entrenamiento frente a AUC" src="../results/figures/08_tiempo_vs_auc.png" /></p>
+<h2>Errores de clasificación</h2>
+<p>Las matrices usan el umbral seleccionado en validación para cada modelo, igual que la tabla principal. La regresión logística clasificó como recompra al 80.7% de los clientes; el perceptrón, al 64.6%; Random Forest, al 77.9%; y Gradient Boosting, al 71.2%. Estas proporciones explican la sensibilidad alta y la precisión moderada: los umbrales favorecen detectar recompradores, pero también generan falsos positivos. Antes del despliegue deben recalibrarse según el costo del descuento y el valor esperado de una recompra, sin usar la semana de prueba para optimizarlos.</p>
+<p><img alt="Matrices de confusión con umbrales de validación" src="../results/figures/08_matrices_confusion.png" /></p>
+<h2>Ofertas no vistas</h2>
+<p>Una oferta cuenta como vista si aparece en los datos con que se entrenaron los modelos versión 2, del 1 de marzo al 23 de abril. Con ese criterio, 33,086 clientes de la semana de prueba, el 93.2%, recibieron una de las 11 ofertas ya vistas, y solo 2,413, el 6.8%, recibieron la única oferta nueva. Por lo tanto, la semana de prueba mide sobre todo el desempeño con ofertas conocidas.</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th style="text-align: right;">AUC con ofertas vistas</th>
+<th style="text-align: right;">AUC con la oferta no vista</th>
+<th style="text-align: right;">Diferencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión logística</td>
+<td style="text-align: right;">0.6552</td>
+<td style="text-align: right;">0.5710</td>
+<td style="text-align: right;">−0.0841</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td style="text-align: right;">0.6507</td>
+<td style="text-align: right;">0.5871</td>
+<td style="text-align: right;">−0.0636</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td style="text-align: right;">0.6206</td>
+<td style="text-align: right;">0.5664</td>
+<td style="text-align: right;">−0.0542</td>
+</tr>
+<tr>
+<td>Gradient Boosting</td>
+<td style="text-align: right;">0.6185</td>
+<td style="text-align: right;">0.5757</td>
+<td style="text-align: right;">−0.0428</td>
+</tr>
+</tbody>
+</table>
+<p>Los cuatro modelos pierden AUC con la oferta nueva. Los que más ganaron al incorporar la semana de validación, la regresión logística y el perceptrón, son también los que más pierden. Como el grupo no visto es una sola oferta, esta comparación es solo indicativa.</p>
+<p>La situación del conjunto de prueba de Kaggle es distinta: allí el 96.3% de los clientes recibió ofertas ausentes del entrenamiento. Para medir ese caso se usaron cinco divisiones <code>GroupShuffleSplit</code> que reservaron ofertas completas. En cada división los modelos se reentrenan con los hiperparámetros de su ficha, por lo que este resultado no depende de la versión 1 o 2.</p>
+<table>
+<thead>
+<tr>
+<th>Modelo</th>
+<th style="text-align: right;">AUC medio</th>
+<th style="text-align: right;">Desviación estándar</th>
+<th style="text-align: right;">Mínimo</th>
+<th style="text-align: right;">Máximo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gradient Boosting</td>
+<td style="text-align: right;"><strong>0.6197</strong></td>
+<td style="text-align: right;">0.0659</td>
+<td style="text-align: right;">0.5460</td>
+<td style="text-align: right;">0.6934</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td style="text-align: right;">0.6107</td>
+<td style="text-align: right;"><strong>0.0349</strong></td>
+<td style="text-align: right;">0.5803</td>
+<td style="text-align: right;">0.6654</td>
+</tr>
+<tr>
+<td>Regresión logística</td>
+<td style="text-align: right;">0.6090</td>
+<td style="text-align: right;">0.0518</td>
+<td style="text-align: right;">0.5454</td>
+<td style="text-align: right;">0.6820</td>
+</tr>
+<tr>
+<td>Perceptrón multicapa</td>
+<td style="text-align: right;">0.5824</td>
+<td style="text-align: right;">0.0590</td>
+<td style="text-align: right;">0.5321</td>
+<td style="text-align: right;">0.6800</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="AUC al reservar ofertas no vistas" src="../results/figures/08_auc_ofertas_no_vistas.png" /></p>
+<p>Con ofertas nuevas, Gradient Boosting obtuvo el mayor AUC medio, 0.6197, y la regresión logística el tercero, 0.6090. La diferencia, 0.0107, es menor que la desviación estándar de ambos modelos, así que con ofertas nuevas ningún algoritmo se distingue con claridad. La regresión logística se mantiene como modelo de referencia porque obtuvo el mayor AUC en la semana de prueba, su desempeño con ofertas nuevas queda dentro del rango de los demás y es el más sencillo de interpretar. Aun así, su rendimiento debe vigilarse en cada campaña que traiga ofertas nuevas.</p>
+<h2>Reproducibilidad</h2>
+<p>Las cifras provienen de <code>results/tables/08_metricas_prueba.csv</code>, <code>08_predicciones_prueba.parquet</code> y <code>08_validacion_por_ofertas.csv</code>, generadas por el notebook 08 ejecutado con <code>cargar_modelos(version=2)</code>. Las ofertas vistas se definen respecto del entrenamiento y la validación, que son los datos de los modelos versión 2. Las predicciones individuales permiten reconstruir las curvas ROC y matrices sin reentrenar los modelos.</p></section>
+<section><h1>Resultados: aplicación interactiva</h1>
+<p>La aplicación permite recorrer tres tareas desde Inicio: explorar el conjunto limpio, clasificar clientes y consultar el rendimiento. Se implementó con Streamlit para reutilizar los módulos de Python del proyecto, el preprocesamiento y los modelos congelados; Plotly permite consultar puntos, seleccionar series y ampliar rangos sin generar nuevas imágenes. Los datos de exploración y evaluación se almacenan en caché y se invalidan cuando cambia el archivo de origen. Las páginas de exploración y rendimiento no cargan modelos.</p>
+<p><img alt="Inicio y navegación entre las tareas" src="../results/figures/04_app_inicio.png" /></p>
+<h2>Exploración del conjunto limpio</h2>
+<p>Explorar datos ofrece filtros combinables de oferta, cadena y categoría, indicadores del tamaño de selección y la recompra, y una referencia global fija de 27.14%. Una primera gráfica compara clientes con y sin historial de compra del producto. Las tasas y tamaños se recalculan con cada selección; la anotación aclara el hallazgo del conjunto completo. Una segunda gráfica compara las tasas de los 15 grupos más frecuentes de la dimensión elegida. La distribución de variables prioriza las entradas declaradas en el manifiesto de modelos y permite consultar faltantes, estadísticas y el diccionario. La página permite descargar los clientes filtrados. Si una combinación no tiene datos, muestra un mensaje y permite corregir los filtros.</p>
+<p><img alt="Exploración y hallazgo del historial del producto" src="../results/figures/04_app_explorar.png" /></p>
+<h2>Clasificación de datos nuevos</h2>
+<p>La página de Joel acepta transacciones de un cliente o un cliente de ejemplo, prepara las entradas mediante las funciones compartidas del entrenamiento y compara las probabilidades de uno o todos los algoritmos congelados. La explicación completa, las capturas y las reglas de validación están en <code>08b_clasificar_y_preprocesamiento.md</code>, que forma parte de la integración del informe.</p>
+<p><img alt="Ingreso de datos para clasificar" src="../results/figures/09_app_clasificar_datos.jpg" /></p>
+<p><img alt="Resultados de la clasificación" src="../results/figures/09_app_clasificar_resultado.jpg" /></p>
+<h2>Rendimiento interactivo</h2>
+<p>Rendimiento lee las métricas, probabilidades y divisiones agrupadas de las tres tablas 08 de Fernando. Muestra curvas ROC de los modelos seleccionados, una matriz de confusión con umbral ajustable, precisión, sensibilidad y F1 recalculados, y una comparación de las métricas oficiales. Las métricas oficiales conservan los umbrales elegidos en validación; el control de umbral es exploratorio y no cambia la evaluación oficial ni selecciona hiperparámetros con la prueba. La AUC permanece independiente del umbral.</p>
+<p><img alt="Curvas ROC de la semana de prueba" src="../results/figures/04_app_rendimiento.png" /></p>
+<p><img alt="Errores al cambiar el umbral" src="../results/figures/04_app_umbral.png" /></p>
+<p>Se distingue explícitamente la semana de prueba temporal, del 24 al 30 de abril de 2013, de la validación agrupada por oferta. Esta última muestra la media y desviación estándar de AUC y el número de divisiones. También se presentan las AUC temporales por ofertas vistas y no vistas cuando están disponibles. El conjunto de prueba de Kaggle carece de etiquetas y no se presenta como una evaluación supervisada.</p>
+<p>Un interruptor situado antes de los resultados oculta toda la información de rendimiento. Si faltan las tablas requeridas, la página muestra cómo generarlas, sin entrenar ni estimar resultados de reemplazo.</p>
+<p><img alt="Rendimiento oculto a petición del usuario" src="../results/figures/04_app_oculto.png" /></p>
+<h2>Color y presentación</h2>
+<p>Se utiliza la paleta Okabe-Ito del módulo común de Joel. El azul <code>#0072B2</code> guía la navegación y las comparaciones generales; el bermellón <code>#D55E00</code> destaca el hallazgo y el gris proporciona contexto. Regresión logística, Random Forest, Gradient Boosting y perceptrón multicapa conservan sus colores azul, naranja, verde y rosa en todas las páginas. Nombres, cifras y etiquetas acompañan el color para no depender de su percepción. Las barras de tasas parten de cero y la correlación utiliza una escala divergente centrada en cero. El tema tiene fondo claro, texto oscuro y rejillas discretas.</p>
+<h2>Verificación y alcance</h2>
+<p>Las comprobaciones automáticas de las páginas y controles se documentan en <code>verificacion_nery.md</code>. La tabla de Joel <code>09_verificacion_app.csv</code> registra la comparación de variables y probabilidades en 100 clientes; esta evidencia pertenece a su módulo y no sustituye una prueba de usabilidad. La prueba con una persona externa permanece pendiente y su protocolo está en <code>informe/presentacion_nery.md</code>.</p>
+<p>Para la conclusión del objetivo 5: Nery aporta las vistas de exploración y rendimiento y su verificación funcional; la coincidencia de entradas y probabilidades debe atribuirse a la verificación de Joel. No se afirma que la interfaz haya sido validada por una persona externa antes de realizar esa sesión.</p></section>
+<section><h1>Aplicación: ingreso y clasificación de clientes nuevos</h1>
+<p>La página Clasificar permite ingresar los datos de un cliente nuevo y ver la probabilidad de que vuelva a comprar según cada algoritmo. Cubre dos requisitos de la guía: ingresar nuevos datos para que el sistema los clasifique con los modelos entrenados y ver el resultado de cada algoritmo por separado o de todos.</p>
+<h2>Ingreso de los datos</h2>
+<p>El usuario puede ingresar al cliente de dos formas:</p>
+<ul>
+<li><strong>Un cliente de ejemplo.</strong> La aplicación incluye 100 clientes reales de la semana de prueba, con sus 119,819 líneas de compra originales. Los modelos no vieron a estos clientes durante el entrenamiento. Al elegir uno, la página muestra su oferta, la fecha de la oferta y su mercado, y permite descargar sus compras en CSV como modelo del formato.</li>
+<li><strong>Un archivo propio.</strong> El usuario sube un CSV con las compras de un cliente, en el formato de las transacciones de la competencia, y elige la oferta que se le hará, la fecha de la oferta y el mercado.</li>
+</ul>
+<p><img alt="Ingreso de los datos y resumen de la predicción en la página Clasificar" src="../results/figures/09_app_clasificar_datos.jpg" /></p>
+<h2>Preprocesamiento invisible para el usuario</h2>
+<p>Las compras crudas no son lo que reciben los modelos: hay que resumirlas en una fila por cliente con las mismas variables del entrenamiento. Ese paso corre por detrás, en el módulo <code>src/entrada_app.py</code>, y el usuario solo ve el resultado en la ficha del cliente.</p>
+<p>Para garantizar que un cliente nuevo se transforme exactamente igual que los clientes de entrenamiento, el módulo no reescribe ningún cálculo. Usa las mismas funciones de <code>src/preprocesamiento.py</code> que construyeron el conjunto de datos de los modelos, con las mismas reglas:</p>
+<ul>
+<li>Solo cuentan las compras en la cadena del cliente.</li>
+<li>Solo cuentan las compras anteriores a la fecha de la oferta, para no usar información del futuro.</li>
+<li>Si el cliente nunca compró la categoría, la compañía, la marca o el producto ofertado, esos conteos quedan en cero y se activa la bandera correspondiente.</li>
+</ul>
+<p>Antes de calcular, el módulo revisa los datos y responde con un mensaje claro en lugar de un error del programa:</p>
+<table>
+<thead>
+<tr>
+<th>Situación</th>
+<th>Respuesta de la aplicación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El archivo no es un CSV o está vacío</td>
+<td>Pide revisar el formato del archivo</td>
+</tr>
+<tr>
+<td>Faltan columnas necesarias</td>
+<td>Indica cuáles faltan</td>
+</tr>
+<tr>
+<td>El archivo trae compras de varios clientes</td>
+<td>Pide subir un solo cliente</td>
+</tr>
+<tr>
+<td>Hay líneas con fechas o montos ilegibles</td>
+<td>Las descarta y avisa cuántas fueron</td>
+</tr>
+<tr>
+<td>Hay compras de otras cadenas</td>
+<td>Usa solo la cadena con más compras y avisa</td>
+</tr>
+<tr>
+<td>Hay compras en la fecha de la oferta o después</td>
+<td>Las ignora y avisa</td>
+</tr>
+<tr>
+<td>El cliente no tiene compras previas</td>
+<td>Clasifica solo con los datos de la oferta y advierte que el resultado es menos confiable</td>
+</tr>
+</tbody>
+</table>
+<h2>Resultado de cada algoritmo</h2>
+<p>La página carga los cuatro modelos congelados de la versión 2 una sola vez y solo les pide predicciones; nunca los vuelve a entrenar. Antes de usarlos, el cargador comprueba que cada archivo no haya cambiado y que la versión de scikit-learn sea la misma con que se entrenaron.</p>
+<p>La página se divide en dos columnas: a la izquierda los datos y la ficha del cliente, y a la derecha el resultado, para ver ambos sin desplazarse. El resultado empieza con una tarjeta que destaca la probabilidad que asigna la regresión logística, el modelo de referencia, si alcanza su umbral y cuántos de los cuatro modelos coinciden con ella.</p>
+<p>El usuario elige ver los cuatro modelos o uno solo. Para cada modelo, la gráfica muestra:</p>
+<ul>
+<li>la probabilidad de recompra en una barra, con el color fijo de ese modelo en todo el proyecto;</li>
+<li>una línea negra en el umbral del modelo, elegido en la semana de validación;</li>
+<li>la clasificación final, recompra o no recompra, escrita junto a la barra.</li>
+</ul>
+<p>El título de la gráfica resume la respuesta, por ejemplo "3 de 4 modelos predicen que volverá a comprar". Con un cliente de ejemplo, el usuario también puede revelar qué pasó en la realidad y compararlo con la predicción.</p>
+<p><img alt="Ficha del cliente y probabilidad de recompra según los cuatro modelos en la página Clasificar" src="../results/figures/09_app_clasificar_resultado.jpg" /></p>
+<p>Debajo, una segunda gráfica conecta la predicción con el hallazgo central del análisis exploratorio. Entre los clientes que ya habían comprado el producto ofertado, el 42.8% volvió a comprar, frente al 24.2% de los que nunca lo habían comprado. La gráfica resalta el grupo al que pertenece el cliente, para que el usuario entienda por qué los modelos le asignan esa probabilidad.</p>
+<h2>Verificación de la aplicación</h2>
+<p>Para comprobar que la aplicación prepara y clasifica igual que el entrenamiento, se procesaron los 100 clientes de ejemplo de la semana de prueba con el mismo módulo y los mismos modelos que usa la página. El script <code>src/verificar_entrada_app.py</code> hizo dos comparaciones:</p>
+<ol>
+<li><strong>Variables.</strong> Comparó las 46 variables que calcula la aplicación con las del conjunto de datos del entrenamiento. Coincidieron todas en los 100 clientes.</li>
+<li><strong>Probabilidades.</strong> Comparó la probabilidad de cada uno de los cuatro modelos con la que guardó el cuaderno de evaluación. La mayor diferencia fue de 3.3 × 10⁻¹⁶, que corresponde al redondeo de la computadora.</li>
+</ol>
+<p>Los 100 clientes coincidieron en todo, lo que cumple la condición del objetivo específico 5. El resultado está en <code>results/tables/09_verificacion_app.csv</code>, y la comprobación se puede repetir con las pruebas automáticas de <code>tests/test_entrada_app.py</code>.</p></section>
+<section><h1>Conclusiones</h1>
+<p>El objetivo general se cumplió: la regresión logística versión 2 obtuvo el mejor resultado en la semana de prueba, con AUC 0.6470, sensibilidad 0.8848 y F1 0.5448. El perceptrón multicapa quedó prácticamente empatado en discriminación, con AUC 0.6461, y alcanzó la mayor precisión, 0.4154. Se selecciona la regresión logística como modelo de referencia por su mayor AUC y F1, aunque el perceptrón constituye una alternativa si se busca reducir la cantidad de contactos positivos.</p>
+<p>El objetivo específico 1 se cumplió al evaluar regresión logística, Random Forest, Gradient Boosting y perceptrón multicapa sobre la misma semana futura. Sus AUC fueron 0.6470, 0.6151, 0.6121 y 0.6461, respectivamente. El reentrenamiento hasta el 23 de abril cambió el orden observado con la primera versión y confirmó la importancia de incorporar toda la información disponible antes de la prueba final.</p>
+<p>El objetivo específico 2 se cumplió mediante la búsqueda aleatoria de hiperparámetros en la semana de validación. Frente a la configuración por defecto, el ajuste aumentó el AUC de validación en 0.0017 para la regresión logística, 0.0293 para Random Forest, 0.0079 para Gradient Boosting y 0.0469 para el perceptrón multicapa. Los algoritmos con más hiperparámetros sensibles fueron los que más ganaron. Los hiperparámetros y umbrales se conservaron al reentrenar la versión 2 con entrenamiento y validación, por lo que la semana de prueba no intervino en su elección.</p>
+<p>El objetivo específico 3 se cumplió al contrastar ofertas vistas y no vistas. Para los modelos versión 2, el 93.2% de los clientes de la semana de prueba recibió ofertas ya vistas y solo una oferta, con 2,413 clientes, fue nueva; con ella los cuatro modelos perdieron entre 0.0428 y 0.0841 de AUC. Para ofertas completamente nuevas, como las que recibió el 96.3% de los clientes del conjunto de prueba de Kaggle, las cinco divisiones agrupadas por oferta dieron un AUC medio de 0.6197 para Gradient Boosting y de 0.6090 para la regresión logística, con desviaciones estándar de 0.0659 y 0.0518. La diferencia entre ambos es menor que esa variación, así que con ofertas nuevas ningún algoritmo se distingue con claridad. La predicción se degrada con ofertas nuevas y su rendimiento debe vigilarse en cada campaña.</p>
+<p>El objetivo específico 4 se cumplió mediante importancia por permutación. Se calculó con los modelos versión 1 en la semana de validación, porque los modelos versión 2 ya entrenaron con esa semana. Al permutar el gasto previo en el producto ofertado, el AUC cayó 0.0666 en la regresión logística y 0.0354 en el perceptrón multicapa, la mayor caída en ambos. En Gradient Boosting la mayor caída fue la de la categoría de la oferta, 0.0217, seguida del gasto en el producto, 0.0191. El historial relacionado con el producto y su categoría sostiene una parte importante de la predicción, como anticipó el análisis exploratorio.</p>
+<p>Para apoyar la integración de la aplicación se generó <code>08_predicciones_prueba.parquet</code>, con 35,499 filas y una probabilidad por modelo. La coincidencia entre la aplicación y estos resultados debe verificarse mediante una prueba de integración antes de declararla completa.</p>
+<p>Los umbrales de validación clasificaron como recompra entre 64.6% y 80.7% de los clientes. Esta amplitud favorece la sensibilidad, pero produce numerosos falsos positivos. Antes del despliegue se recomienda calibrar las probabilidades y elegir el umbral mediante una función de valor esperado que incorpore el costo del descuento, el margen de la recompra y el costo de contactar a un cliente que no volverá.</p></section>
+<section><h1>Referencias</h1>
+<p>Ahmad, A. K., Jafar, A., &amp; Aljoumaa, K. (2019). Customer churn prediction in telecom using machine learning in big data platform. <em>Journal of Big Data, 6</em>(1), Artículo 28. https://journalofbigdata.springeropen.com/articles/10.1186/s40537-019-0191-6</p>
+<p>Bergstra, J., &amp; Bengio, Y. (2012). Random search for hyper-parameter optimization. <em>Journal of Machine Learning Research, 13</em>(10), 281–305. https://jmlr.org/papers/v13/bergstra12a.html</p>
+<p>Breiman, L. (2001). Random forests. <em>Machine Learning, 45</em>(1), 5–32. https://link.springer.com/article/10.1023/A:1010933404324</p>
+<p>Buckinx, W., &amp; Van den Poel, D. (2005). Customer base analysis: Partial defection of behaviourally loyal clients in a non-contractual FMCG retail setting. <em>European Journal of Operational Research, 164</em>(1), 252–268. https://www.sciencedirect.com/science/article/pii/S0377221703009184</p>
+<p>Burez, J., &amp; Van den Poel, D. (2009). Handling class imbalance in customer churn prediction. <em>Expert Systems with Applications, 36</em>(3), 4626–4636. https://www.sciencedirect.com/science/article/pii/S0957417408002121</p>
+<p>Chawla, N. V., Bowyer, K. W., Hall, L. O., &amp; Kegelmeyer, W. P. (2002). SMOTE: Synthetic minority over-sampling technique. <em>Journal of Artificial Intelligence Research, 16</em>, 321–357. https://www.jair.org/index.php/jair/article/view/10302</p>
+<p>Chen, T., &amp; Guestrin, C. (2016). XGBoost: A scalable tree boosting system. En <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em> (pp. 785–794). ACM. https://www.kdd.org/kdd2016/papers/files/rfp0697-chenAemb.pdf</p>
+<p>Christy, A. J., Umamakeswari, A., Priyatharsini, L., &amp; Neyaa, A. (2021). RFM ranking – An effective approach to customer segmentation. <em>Journal of King Saud University – Computer and Information Sciences, 33</em>(10), 1251–1257. https://www.sciencedirect.com/science/article/pii/S1319157818304178</p>
+<p>Cox, D. R. (1958). The regression analysis of binary sequences. <em>Journal of the Royal Statistical Society: Series B (Methodological), 20</em>(2), 215–232. https://academic.oup.com/jrsssb/article/20/2/215/7027376</p>
+<p>De Caigny, A., Coussement, K., &amp; De Bock, K. W. (2018). A new hybrid classification algorithm for customer churn prediction based on logistic regression and decision trees. <em>European Journal of Operational Research, 269</em>(2), 760–772. https://www.sciencedirect.com/science/article/pii/S0377221718301243</p>
+<p>Fawcett, T. (2006). An introduction to ROC analysis. <em>Pattern Recognition Letters, 27</em>(8), 861–874. https://www.sciencedirect.com/science/article/pii/S016786550500303X</p>
+<p>Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. <em>The Annals of Statistics, 29</em>(5), 1189–1232. https://projecteuclid.org/journals/annals-of-statistics/volume-29/issue-5/Greedy-function-approximation-A-gradient-boosting-machine/10.1214/aos/1013203451.full</p>
+<p>Grinsztajn, L., Oyallon, E., &amp; Varoquaux, G. (2022). Why do tree-based models still outperform deep learning on typical tabular data? En <em>Advances in Neural Information Processing Systems 35</em> (pp. 507–520). Curran Associates. https://proceedings.neurips.cc/paper_files/paper/2022/hash/0378c7692da36807bdec87ab043cdadc-Abstract-Datasets_and_Benchmarks.html</p>
+<p>Kaggle. (2014). <em>Acquire valued shoppers challenge. Predict which shoppers will become repeat buyers</em> [Conjunto de datos y descripción de la competencia]. https://www.kaggle.com/competitions/acquire-valued-shoppers-challenge/data</p>
+<p>Ke, G., Meng, Q., Finley, T., Wang, T., Chen, W., Ma, W., Ye, Q., &amp; Liu, T.-Y. (2017). LightGBM: A highly efficient gradient boosting decision tree. En <em>Advances in Neural Information Processing Systems 30</em>. Curran Associates. https://proceedings.neurips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html</p>
+<p>Larivière, B., &amp; Van den Poel, D. (2005). Predicting customer retention and profitability by using random forests and regression forests techniques. <em>Expert Systems with Applications, 29</em>(2), 472–484. https://www.sciencedirect.com/science/article/pii/S0957417405000965</p>
+<p>Lemmens, A., &amp; Croux, C. (2006). Bagging and boosting classification trees to predict churn. <em>Journal of Marketing Research, 43</em>(2), 276–286. https://journals.sagepub.com/doi/10.1509/jmkr.43.2.276</p>
+<p>Lessmann, S., Baesens, B., Seow, H.-V., &amp; Thomas, L. C. (2015). Benchmarking state-of-the-art classification algorithms for credit scoring: An update of research. <em>European Journal of Operational Research, 247</em>(1), 124–136. https://www.sciencedirect.com/science/article/pii/S0377221715004208</p>
+<p>Liu, G., Nguyen, T. T., Zhao, G., Zha, W., Yang, J., Cao, J., Wu, M., Zhao, P., &amp; Chen, W. (2016). Repeat buyer prediction for e-commerce. En <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em> (pp. 155–164). ACM. https://www.kdd.org/kdd2016/papers/files/adf0160-liuA.pdf</p>
+<p>Martínez, A., Schmuck, C., Pereverzyev, S., Pirker, C., &amp; Haltmeier, M. (2020). A machine learning framework for customer purchase prediction in the non-contractual setting. <em>European Journal of Operational Research, 281</em>(3), 588–596. https://www.sciencedirect.com/science/article/pii/S0377221718303370</p>
+<p>Neslin, S. A., Gupta, S., Kamakura, W., Lu, J., &amp; Mason, C. H. (2006). Defection detection: Measuring and understanding the predictive accuracy of customer churn models. <em>Journal of Marketing Research, 43</em>(2), 204–211. https://journals.sagepub.com/doi/10.1509/jmkr.43.2.204</p>
+<p>Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., &amp; Duchesnay, É. (2011). Scikit-learn: Machine learning in Python. <em>Journal of Machine Learning Research, 12</em>(85), 2825–2830. https://jmlr.org/papers/v12/pedregosa11a.html</p>
+<p>Ren, X., Cao, J., Xu, X., &amp; Gong, Y. (2021). A two-stage model for forecasting consumers' intention to purchase with e-coupons. <em>Journal of Retailing and Consumer Services, 59</em>, Artículo 102289. https://www.sciencedirect.com/science/article/pii/S0969698920312972</p>
+<p>Rumelhart, D. E., Hinton, G. E., &amp; Williams, R. J. (1986). Learning representations by back-propagating errors. <em>Nature, 323</em>(6088), 533–536. https://www.nature.com/articles/323533a0</p>
+<p>Shwartz-Ziv, R., &amp; Armon, A. (2022). Tabular data: Deep learning is not all you need. <em>Information Fusion, 81</em>, 84–90. https://www.sciencedirect.com/science/article/pii/S1566253521002360</p>
+<p>Verbeke, W., Dejaeger, K., Martens, D., Hur, J., &amp; Baesens, B. (2012). New insights into churn prediction in the telecommunication sector: A profit driven data mining approach. <em>European Journal of Operational Research, 218</em>(1), 211–229. https://www.sciencedirect.com/science/article/pii/S0377221711008599</p>
+<p>Zhang, M., Lu, J., Ma, N., Cheng, T. C. E., &amp; Hua, G. (2022). A feature engineering and ensemble learning based approach for repeated buyers prediction. <em>International Journal of Computers Communications &amp; Control, 17</em>(6), Artículo 4988. https://univagora.ro/jour/index.php/ijccc/article/view/4988</p></section></body></html>
