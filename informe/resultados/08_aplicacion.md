@@ -12,7 +12,7 @@ Explorar datos ofrece filtros combinables de oferta, cadena y categoría, indica
 
 ## Clasificación de datos nuevos
 
-La página de Joel acepta transacciones de un cliente o un cliente de ejemplo, prepara las entradas mediante las funciones compartidas del entrenamiento y compara las probabilidades de uno o todos los algoritmos congelados. La explicación completa, las capturas y las reglas de validación están en `08b_clasificar_y_preprocesamiento.md`, que forma parte de la integración del informe.
+La página Clasificar acepta las transacciones de un cliente o un cliente de ejemplo, prepara las entradas con las mismas funciones del entrenamiento y compara las probabilidades de uno o de todos los algoritmos congelados. Su funcionamiento, sus reglas de validación y su verificación se describen en el apartado siguiente.
 
 ![Ingreso de datos para clasificar](../../results/figures/09_app_clasificar_datos.jpg)
 
@@ -20,7 +20,7 @@ La página de Joel acepta transacciones de un cliente o un cliente de ejemplo, p
 
 ## Rendimiento interactivo
 
-Rendimiento lee las métricas, probabilidades y divisiones agrupadas de las tres tablas 08 de Fernando. Muestra curvas ROC de los modelos seleccionados, una matriz de confusión con umbral ajustable, precisión, sensibilidad y F1 recalculados, y una comparación de las métricas oficiales. Las métricas oficiales conservan los umbrales elegidos en validación; el control de umbral es exploratorio y no cambia la evaluación oficial ni selecciona hiperparámetros con la prueba. La AUC permanece independiente del umbral.
+Rendimiento lee las métricas, probabilidades y divisiones agrupadas de las tres tablas de evaluación. Muestra curvas ROC de los modelos seleccionados, una matriz de confusión con umbral ajustable, precisión, sensibilidad y F1 recalculados, y una comparación de las métricas oficiales. Las métricas oficiales conservan los umbrales elegidos en validación; el control de umbral es exploratorio y no cambia la evaluación oficial ni selecciona hiperparámetros con la prueba. La AUC permanece independiente del umbral.
 
 ![Curvas ROC de la semana de prueba](../../results/figures/04_app_rendimiento.png)
 
@@ -34,10 +34,10 @@ Un interruptor situado antes de los resultados oculta toda la información de re
 
 ## Color y presentación
 
-Se utiliza la paleta Okabe-Ito del módulo común de Joel. El azul `#0072B2` guía la navegación y las comparaciones generales; el bermellón `#D55E00` destaca el hallazgo y el gris proporciona contexto. Regresión logística, Random Forest, Gradient Boosting y perceptrón multicapa conservan sus colores azul, naranja, verde y rosa en todas las páginas. Nombres, cifras y etiquetas acompañan el color para no depender de su percepción. Las barras de tasas parten de cero y la correlación utiliza una escala divergente centrada en cero. El tema tiene fondo claro, texto oscuro y rejillas discretas.
+Se utiliza la paleta Okabe-Ito del módulo común de estilo del proyecto. El azul `#0072B2` guía la navegación y las comparaciones generales; el bermellón `#D55E00` destaca el hallazgo y el gris proporciona contexto. Regresión logística, Random Forest, Gradient Boosting y perceptrón multicapa conservan sus colores azul, naranja, verde y rosa en todas las páginas. Nombres, cifras y etiquetas acompañan el color para no depender de su percepción. Las barras de tasas parten de cero y la correlación utiliza una escala divergente centrada en cero. El tema tiene fondo claro, texto oscuro y rejillas discretas.
 
 ## Verificación y alcance
 
-Las comprobaciones automáticas de las páginas y controles se documentan en `verificacion_nery.md`. La tabla de Joel `09_verificacion_app.csv` registra la comparación de variables y probabilidades en 100 clientes; esta evidencia pertenece a su módulo y no sustituye una prueba de usabilidad. La prueba con una persona externa permanece pendiente y su protocolo está en `informe/presentacion_nery.md`.
+Las páginas se verificaron con pruebas automáticas que abren cada una y ejercitan sus controles: los filtros, una combinación de filtros sin clientes, el cambio de umbral, la selección vacía de modelos y el interruptor que oculta el rendimiento. Además, las AUC recalculadas con las probabilidades guardadas coinciden con las de la evaluación en los cuatro modelos. La comparación de variables y probabilidades de la página Clasificar en 100 clientes se describe en el apartado siguiente.
 
-Para la conclusión del objetivo 5: Nery aporta las vistas de exploración y rendimiento y su verificación funcional; la coincidencia de entradas y probabilidades debe atribuirse a la verificación de Joel. No se afirma que la interfaz haya sido validada por una persona externa antes de realizar esa sesión.
+Estas comprobaciones no sustituyen una prueba de uso con personas. La prueba con una persona externa al grupo queda pendiente.
