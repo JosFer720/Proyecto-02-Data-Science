@@ -2,7 +2,10 @@ pandas==2.2.3
 numpy==2.1.2
 matplotlib==3.9.2
 scikit-learn==1.6.1
-scipy==1.15.1
+# scipy 1.15.1 no carga en versiones recientes de macOS; ahí se usa 1.16.3.
+# Los modelos congelados solo exigen scikit-learn 1.6.1, así que no cambian sus resultados.
+scipy==1.15.1; sys_platform != "darwin"
+scipy==1.16.3; sys_platform == "darwin"
 joblib==1.4.2
 pyarrow==18.1.0
 jupyter==1.1.1

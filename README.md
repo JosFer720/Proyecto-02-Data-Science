@@ -41,6 +41,18 @@ python -m venv .venv
 .\.venv\Scripts\python -m streamlit run app/Inicio.py
 ```
 
+En macOS o Linux:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m streamlit run app/Inicio.py
+```
+
+En macOS se instala scipy 1.16.3 en lugar de 1.15.1, porque esa versión no carga en
+versiones recientes del sistema. La aplicación funciona igual, ya que los modelos solo
+exigen scikit-learn 1.6.1. El cuaderno 08 sí exige scipy 1.15.1 para volver a ejecutarse.
+
 Abrir la dirección local que imprime Streamlit. La navegación lateral contiene
 Explorar datos, Clasificar y Rendimiento. Explorar permite combinar filtros de
 oferta, cadena y categoría; Rendimiento permite elegir modelos, cambiar el umbral

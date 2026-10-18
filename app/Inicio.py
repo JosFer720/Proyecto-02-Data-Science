@@ -13,5 +13,5 @@ for titulo, ruta, descripcion in [
     st.page_link(ruta, label=titulo)
     st.caption(descripcion)
 st.subheader("Datos y evaluación")
-st.write("Acquire Valued Shoppers · 160,057 clientes con etiqueta. Entrenamiento: 1 de marzo–16 de abril de 2013; validación: 17–23 de abril; prueba: 24–30 de abril (35,499 clientes).")
+st.write("Acquire Valued Shoppers · 160,057 clientes con etiqueta. Entrenamiento: 1 de marzo–16 de abril de 2013; validación: 17–23 de abril; prueba: 24–30 de abril (35,499 clientes). Con los hiperparámetros elegidos en validación, los modelos finales se reentrenaron con entrenamiento y validación, hasta el 23 de abril.")
 st.caption("Los 151,484 clientes del conjunto de prueba de Kaggle no tienen etiqueta y no se usan para medir rendimiento. Las asociaciones exploratorias no demuestran causalidad.")

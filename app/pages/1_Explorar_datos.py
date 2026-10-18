@@ -29,7 +29,7 @@ filtrado = datos.copy()
 with st.sidebar:
     st.header("Filtrar clientes")
     for columna, etiqueta in [("offer", "Oferta"), ("chain", "Cadena"), ("category", "Categoría")]:
-        seleccion = st.multiselect(etiqueta, sorted(datos[columna].dropna().unique()))
+        seleccion = st.multiselect(etiqueta, sorted(datos[columna].dropna().unique()), placeholder="Elige una o varias")
         if seleccion:
             filtrado = filtrado[filtrado[columna].isin(seleccion)]
     st.caption("Sin selección se incluyen todos los grupos. Los filtros se combinan.")
