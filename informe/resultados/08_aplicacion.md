@@ -36,6 +36,23 @@ Un interruptor situado antes de los resultados oculta toda la información de re
 
 Se utiliza la paleta Okabe-Ito del módulo común de Joel. El azul `#0072B2` guía la navegación y las comparaciones generales; el bermellón `#D55E00` destaca el hallazgo y el gris proporciona contexto. Regresión logística, Random Forest, Gradient Boosting y perceptrón multicapa conservan sus colores azul, naranja, verde y rosa en todas las páginas. Nombres, cifras y etiquetas acompañan el color para no depender de su percepción. Las barras de tasas parten de cero y la correlación utiliza una escala divergente centrada en cero. El tema tiene fondo claro, texto oscuro y rejillas discretas.
 
+## Selección de las tecnologías
+
+La aplicación se construyó sobre el mismo entorno de Python del análisis para reutilizar la preparación de los datos y los modelos entrenados. Las tecnologías se eligieron según las tareas que debía realizar el usuario:
+
+| Tecnología | Uso en la aplicación | Razón de la selección |
+|---|---|---|
+| Python | Integra la lectura de datos, el preprocesamiento y las predicciones | Permite compartir las funciones del proyecto y mantener los mismos cálculos al clasificar clientes nuevos |
+| Streamlit | Navegación entre páginas, filtros, carga de CSV, controles y tablas | Permite construir la interfaz desde Python e incorporar directamente las funciones de análisis; su caché evita repetir cargas de datos y modelos en cada interacción |
+| pandas y NumPy | Lectura y filtrado de tablas, preparación de entradas y operaciones numéricas | Son compatibles con las estructuras usadas durante el entrenamiento y permiten recalcular los resúmenes de la selección del usuario |
+| Plotly | Gráficas de exploración, probabilidades, curvas ROC y matriz de confusión | Permite consultar valores al pasar el cursor, ampliar rangos y mostrar u ocultar series para comparar algoritmos |
+| scikit-learn y joblib | Predicciones de los modelos guardados y cálculo de métricas | Reutilizan los estimadores y sus transformaciones del entrenamiento; los archivos conservan los modelos para consultarlos sin volver a entrenar |
+| CSV y Parquet, con PyArrow | Intercambio de conjuntos de datos, métricas y probabilidades | CSV facilita revisar y descargar tablas; Parquet conserva tipos y reduce el espacio de las tablas de mayor volumen |
+
+Las versiones están fijadas en `requirements.txt` para reproducir el entorno. La compatibilidad de los modelos guardados se comprueba antes de predecir. La aplicación se ejecuta con `python -m streamlit run app/Inicio.py` desde la raíz del repositorio y se consulta en el navegador.
+
+En conjunto, estas herramientas permiten probar los cuatro algoritmos sobre un mismo cliente, comparar sus probabilidades y consultar su desempeño en clientes con respuesta conocida. La clasificación usa modelos ya entrenados; los controles de rendimiento permiten explorar los resultados de evaluación existentes.
+
 ## Verificación y alcance
 
 Las comprobaciones automáticas de las páginas y controles se documentan en `verificacion_nery.md`. La tabla de Joel `09_verificacion_app.csv` registra la comparación de variables y probabilidades en 100 clientes; esta evidencia pertenece a su módulo y no sustituye una prueba de usabilidad. La prueba con una persona externa permanece pendiente y su protocolo está en `informe/presentacion_nery.md`.

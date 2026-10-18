@@ -19,7 +19,7 @@ Fecha: 17 de octubre de 2026. Rama: `Proyecto2-Resultados-y-Visualizaciones`.
 
 - Realizar la prueba de uso con una persona externa según `informe/presentacion_nery.md`; la automatización no sustituye esta prueba.
 - Conectar Google Drive y pegar/integrar los aportes en el documento del equipo. No hubo sesión de documento conectada y el enlace no fue accesible desde la herramienta web. No se editó el documento remoto.
-- Faltan `01_introduccion_y_objetivos.md` y `04_datos_y_limpieza.md`, de Joel. No se crearon en su nombre. La compilación local incluye las secciones disponibles y declara estas ausencias en la portada.
+- Falta `01_introduccion_y_objetivos.md`, de Joel. El 18 de octubre de 2026 se agregó `04_datos_y_limpieza.md` a solicitud del equipo, como resumen de las secciones existentes de carga y preprocesamiento. La próxima compilación lo incluirá antes del análisis exploratorio; el PDF y el HTML locales existentes todavía corresponden a la compilación anterior.
 - Revisar en equipo la correspondencia de todas las citas APA y referencias y la numeración final de figuras al integrar las secciones. Los números de figuras del EDA se conservan como referencia al informe anterior, no como numeración definitiva del informe completo.
 - El PDF local es una compilación para revisión: no constituye la entrega final ni prueba de integración en Drive. El ensayo grupal y la exposición requieren a los integrantes.
 

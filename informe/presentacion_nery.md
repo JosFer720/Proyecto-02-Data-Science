@@ -10,6 +10,16 @@ Abrir Rendimiento. Mostrar que la regresión logística presenta la mayor AUC te
 
 Explicar el diseño: Streamlit reutiliza Python; Plotly permite inspección interactiva. La paleta Okabe-Ito mantiene un color por modelo, un acento azul, contexto gris y el hallazgo en bermellón. Las etiquetas permiten entender el gráfico sin depender solo del color.
 
+## Explicación de la aplicación para el lunes 19 de octubre de 2026
+
+Guion breve para acompañar la demostración y las capturas de la sección `08_aplicacion.md`:
+
+«La aplicación permite explorar los datos, probar los cuatro algoritmos con un cliente y comparar su rendimiento. En Explorar podemos filtrar clientes y revisar su comportamiento. En Clasificar elegimos un ejemplo o cargamos un CSV de compras; la aplicación prepara los datos con las mismas funciones del entrenamiento y muestra la probabilidad y la decisión de cada modelo. Joel explica esta parte de la demostración. En Rendimiento comparamos las curvas ROC y los errores: al mover el umbral cambian las decisiones, pero no el AUC.
+
+Elegimos Python para reutilizar el trabajo del proyecto y Streamlit para construir las páginas, los filtros y la carga de archivos. pandas y NumPy manejan las tablas y los cálculos. Plotly permite consultar valores y comparar las gráficas de forma interactiva. scikit-learn y joblib permiten usar los modelos guardados con sus transformaciones, sin entrenarlos durante la demostración. Las tablas se intercambian en CSV y Parquet. Las versiones están fijadas para reproducir el entorno».
+
+Si no se puede realizar la demostración en vivo, mostrar las capturas de Inicio, Explorar, Clasificar y Rendimiento incluidas en el informe y seguir el mismo recorrido. La exposición corresponde al equipo; este texto queda como apoyo para el ensayo.
+
 ## Prueba con una persona externa (pendiente)
 
 No se registra como realizada hasta observar a una persona ajena al grupo. Pedirle, sin indicar qué botones tocar: filtrar una categoría, encontrar el tamaño del grupo, consultar una variable usada por los modelos, identificar el modelo con mayor AUC, cambiar el umbral y ocultar el rendimiento. Registrar fecha, duración, tareas completadas sin ayuda, confusiones y cambios propuestos. No recoger información personal innecesaria.
