@@ -20,7 +20,7 @@ El entrenamiento y el ajuste se hicieron con Python 3.12.4 y todo el código se 
 | scipy | 1.15.1 | Distribuciones de los rangos de la búsqueda aleatoria |
 | joblib | 1.4.2 | Guardado y carga de los modelos entrenados |
 | matplotlib | 3.9.2 | Figuras estáticas del informe |
-| pyarrow | 25.0.1 | Lectura y escritura de tablas en formato Parquet |
+| pyarrow | 18.1.0 | Lectura y escritura de tablas en formato Parquet |
 
 Pedregosa et al. (2011) describen scikit-learn, la biblioteca que aporta la regresión logística, el Random Forest, el Gradient Boosting basado en histogramas y el perceptrón multicapa usados en este trabajo.
 
